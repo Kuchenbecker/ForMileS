@@ -13,7 +13,7 @@ This program is designed to survey the combinatory space of isomers generated fr
     
 Hence, it is suited for cases in which one is in position of parsing this two input informations.
 
-#################################################################################
+#############################################################################
 
 Inputs of the program:
 1. FORMULA
