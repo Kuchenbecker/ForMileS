@@ -1,5 +1,5 @@
 # ForMileS v.2.3 
- -- Formation of Mass Smiles --
+ -- acronymn for Formation of Mass SMILES --
 
 Created by Vinicius Kuchenbecker (1) in association with UNICAMP.
 (1) vincius.kuchenbecker@gmail.com
