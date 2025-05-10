@@ -3,6 +3,11 @@
 ###                   ForMileS - FORMATION OF MASS SMILES                     ###
 ###                                                                           ###
 #################################################################################
+# If the user wants to disable one of the submodules, they can comment out      #
+# the import statement and the corresponding function call in the main module.  #
+# This will prevent the submodule from being executed, but the rest of the code #
+# will still run.                                                               #
+#################################################################################
 
 ########################## IMPORT MODULES OF FORMILES ###########################
 import os
@@ -16,10 +21,10 @@ from mod4 import smiles_to_molecules
 #
 #
 #
-FORMULA = "C6O2"     
-TARGET_MASS = 117.092     
+FORMULA = "C6O2"
 PRECURSOR_FEATURE = "C-C-O-C-C-C"
 CHARGE = 1
+TARGET_MASS = 117.092
 #
 #
 #
