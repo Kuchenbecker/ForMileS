@@ -1,3 +1,11 @@
+#########################################################################
+# This module is designed to generate all possible charged SMILES for a #
+# set of neutral SMILES that the user already filtered according to the #
+# features of importance in the precursor. Also, a last important       #
+# filter of mass garantee the exact mass of the precursor ion           #
+#########################################################################
+
+
 import networkx as nx
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,9 +19,9 @@ from rdkit.Chem import Draw
 from rdkit.Chem.rdMolDescriptors import CalcMolFormula
 from tqdm import tqdm 
 
-# ----- generate charged SMILES from ParentRelatedSMILES ----
+########## generate charged SMILES from ParentRelatedSMILES ##########
 
-def generate_charged_smiles(FORMULA, input_file, output_file=None):
+def generate_charged_smiles(FORMULA, CHARGE, input_file, output_file=None):
 
     output_dir = f"OutputFiles_{FORMULA}" 
     output_path = os.path.join(output_dir, output_file)
@@ -34,7 +42,7 @@ def generate_charged_smiles(FORMULA, input_file, output_file=None):
             if atom.GetSymbol() in ["C", "O"]:
                 mol_copy = Chem.RWMol(mol)
                 atom_copy = mol_copy.GetAtomWithIdx(atom.GetIdx())
-                atom_copy.SetFormalCharge(1)
+                atom_copy.SetFormalCharge(CHARGE)
                 try:
                     charged_smi = Chem.MolToSmiles(mol_copy, canonical=True)
                     charged_smiles.append(charged_smi)
@@ -47,7 +55,7 @@ def generate_charged_smiles(FORMULA, input_file, output_file=None):
 
     print(f"Saved {len(charged_smiles)} charged SMILES to '{output_path}'")
 
-# ----- Filter the charged SMILES by mass ----
+################ Filter the charged SMILES by mass ################
 
 def filter_charged_smiles_by_mass(FORMULA, input_file, TARGET_MASS, tolerance, output_file=None):
     
