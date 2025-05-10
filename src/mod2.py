@@ -1,9 +1,10 @@
-#
-# This module is designed to filter the combinatory space of SMILES
-# generated in mod1.py. 
-# The filter must to be prepared as such as to incorporte the most
-# important features of the precursor molecule.
-#
+#########################################################################
+# This module is designed to filter the combinatory space of SMILES     #
+# generated in mod1.py.                                                 #
+# The filter must to be prepared as such as to incorporte the most      #
+# important features of the precursor molecule.                         #
+#########################################################################
+
 from rdkit import Chem
 from rdkit.Chem import rdMolDescriptors
 from rdkit.Chem import rdqueries
@@ -26,13 +27,13 @@ def is_linear_chain(mol):
     return num_ends == 2 and (num_ends + num_middle == len(degrees))
 
 
-def contains_COC_bond(mol):
+def contains_feature(mol, PRECURSOR_FEATURE):
     """Check for C-O-C using a SMARTS pattern."""
-    coc_pattern = Chem.MolFromSmarts("C-C-O-C-C")
+    coc_pattern = Chem.MolFromSmarts(PRECURSOR_FEATURE)
     return mol.HasSubstructMatch(coc_pattern)
 
 
-def filter_smiles(input_file, FORMULA, output_file=None):
+def filter_smiles(input_file, FORMULA, PRECURSOR_FEATURE, output_file=None):
 
     output_dir = f"OutputFiles_{FORMULA}"
     output_path = os.path.join(output_dir, output_file)
@@ -49,7 +50,7 @@ def filter_smiles(input_file, FORMULA, output_file=None):
         mol = Chem.MolFromSmiles(smi)
         if mol is None:
             continue
-        if contains_COC_bond(mol) and is_linear_chain(mol):
+        if contains_feature(mol, PRECURSOR_FEATURE) and is_linear_chain(mol):
             filtered.append(smi)
 
     # Save results
