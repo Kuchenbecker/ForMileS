@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import os
 import math
 
-# Constants
+####### Image Generation Parameters #######
 MOLS_PER_IMAGE = 10  # Max molecules per image file
 MOLS_PER_ROW = 5     # Molecules per row in each image
 IMAGE_SIZE = (40, 50)  # Base figure size (scaled per image)
@@ -20,7 +20,6 @@ def smiles_to_molecules(FORMULA, input_file):
     molecules = []
     data = []
 
-    # Parse molecules and calculate properties
     for smiles in smiles_list:
         mol = Chem.MolFromSmiles(smiles)
         if mol:
@@ -45,24 +44,20 @@ def smiles_to_molecules(FORMULA, input_file):
         chunk_mols = molecules[start_idx:end_idx]
         chunk_data = data[start_idx:end_idx]
 
-        # Calculate rows needed for this chunk
         n_rows = math.ceil(len(chunk_mols) / MOLS_PER_ROW)
         fig, axes = plt.subplots(n_rows, MOLS_PER_ROW, 
                                 figsize=(IMAGE_SIZE[0], IMAGE_SIZE[1] * (n_rows / 5)))
         
-        # Flatten axes if needed
         if n_rows == 1:
             axes = [axes] if isinstance(axes, plt.Axes) else axes.reshape(1, -1)
         else:
             axes = axes.ravel()
 
-        # Turn off all axes initially
         for ax in axes:
             ax.axis('off')
 
-        # Plot each molecule in the chunk
         for i, (mol, (smiles, mass, formula)) in enumerate(zip(chunk_mols, chunk_data)):
-            if i >= len(axes):  # Safety check
+            if i >= len(axes):
                 break
                 
             img = Draw.MolToImage(mol, size=(250, 100))

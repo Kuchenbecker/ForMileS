@@ -1,4 +1,10 @@
-# ----- LIST OF MODULES AND FUNCTIONS IMPORTED
+#################################################################################
+###                                                                           ###
+###                   ForMileS - FORMATION OF MASS SMILES                     ###
+###                                                                           ###
+#################################################################################
+
+########################## IMPORT MODULES OF FORMILES ###########################
 import os
 from mod1 import generate_smiles
 from mod2 import filter_smiles
@@ -6,15 +12,21 @@ from mod3 import generate_charged_smiles
 from mod3 import filter_charged_smiles_by_mass
 from mod4 import smiles_to_molecules
 
-# ----- Inputs
-
-FORMULA = "C6O2"     #molecular formula without explicit hydrogens
-TARGET_MASS = 117.092     #Charged fragment target mass
-
-# ----- output folder creation
-def create_output_folder(FORMULA):  
+############################### INPUT PARAMETERS ################################
+#
+#
+#
+FORMULA = "C6O2"     
+TARGET_MASS = 117.092     
+PRECURSOR_FEATURE = "C-C-O-C-C-C"
+CHARGE = 1
+#
+#
+#
+############################# DIRECTORY CREATION ###############################
+def create_output_folder(FORMULA, CHARGE):  
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    folder_name = f"OutputFiles_{FORMULA}"
+    folder_name = f"OutputFiles_{FORMULA}_Charge_{CHARGE}"
     folder_path = os.path.join(script_dir, folder_name)
 
     if not os.path.exists(folder_path):
@@ -25,9 +37,9 @@ def create_output_folder(FORMULA):
     
     return folder_path
 
-create_output_folder(FORMULA)
+create_output_folder(FORMULA, CHARGE)
 
-# ----- Main functions and ouputs/prints
+###################### EXECUTION OF FUNCTIONS PER MODULE #######################
 print("###############################################################")
 print("#################   ForMileS v.2.3 Starting   #################")
 print("###############################################################")
@@ -39,11 +51,11 @@ generate_smiles(FORMULA, f"nSMILES_{FORMULA}.txt")
 
 print("Checking heritage with precursor molecule")
 print("Generating filtered by heritage SMILES")
-filter_smiles(f"nSMILES_{FORMULA}.txt", FORMULA, f"ParentRelatedSMILES_{FORMULA}.txt")
+filter_smiles(f"nSMILES_{FORMULA}.txt", FORMULA, PRECURSOR_FEATURE, f"ParentRelatedSMILES_{FORMULA}.txt")
  
 print("Generating charged SMILES from ParentRelatedSMILES")
 print("Filtering charged SMILES by mass")
-generate_charged_smiles(FORMULA, f"ParentRelatedSMILES_{FORMULA}.txt", f"chargedSMILES_{FORMULA}.txt")
+generate_charged_smiles(FORMULA, CHARGE, f"ParentRelatedSMILES_{FORMULA}.txt", f"chargedSMILES_{FORMULA}.txt")
 filter_charged_smiles_by_mass(FORMULA, f"chargedSMILES_{FORMULA}.txt", TARGET_MASS, 0.05, f"filteredchargedSMILES_{FORMULA}.txt")
 
 print("Generating charged molecules properties calculations and images")

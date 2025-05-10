@@ -1,3 +1,10 @@
+#########################################################################
+# This module is the heart of the program. It generates all graphs      #
+# using graph theory and Ullmann's Alogorithm within NetworkX.          #
+# Atoms are nodes and bonds are arests. This module generate the list   #
+# will be used by all the other modules.                                #
+#########################################################################
+
 import networkx as nx
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,7 +18,7 @@ from rdkit.Chem import Draw
 from rdkit.Chem.rdMolDescriptors import CalcMolFormula
 from tqdm import tqdm 
 
-# ---- Bond and Valence Rules ----
+############ Bond and Valence Rules ###########
 bond_orders = {
     ("C", "C"): [1, 2],
     ("C", "O"): [1, 2],
@@ -23,7 +30,7 @@ max_valence = {
     "O": 2,
 }
 
-# ---- Helper Functions ----
+####### Functions for SMILES Generation #######
 
 def parse_formula(FORMULA):
     import re
@@ -87,7 +94,7 @@ def generate_graphs_lazy(atoms):
             expanded = expand_bond_orders(g)
             for eg in expanded:
                 if is_valid(eg):
-                    yield eg  # This is now a generator
+                    yield eg  
 
 
 def number_to_bondtype(order):
