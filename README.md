@@ -1,4 +1,4 @@
-# ForMileS v.2.3 
+# ForMileS v2.4. 
  -- acronymn for Formation of Mass SMILES --
 
 Created by Vinicius Kuchenbecker (1) in association with UNICAMP.
@@ -18,6 +18,8 @@ Hence, it is suited for cases in which one is in position of parsing this two in
 Inputs of the program:
 1. FORMULA
 2. EXACT_MASS
+3. CHARGE
+4. PRECURSOR_FEATURE
 
 User must to give this inside **main.py** script.
 
