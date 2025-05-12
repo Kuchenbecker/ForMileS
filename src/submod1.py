@@ -114,8 +114,8 @@ def graph_to_rdkit_mol(graph):
         rw_mol.AddBond(node_to_idx[i], node_to_idx[j], number_to_bondtype(data['order']))
     return rw_mol
 
-def generate_smiles(FORMULA, output_file=None):
-    output_dir = f"OutputFiles_{FORMULA}"
+def generate_smiles(FORMULA, CHARGE, output_file=None):
+    output_dir = f"OutputFiles_{FORMULA}_Charge_{CHARGE}"
     output_path = os.path.join(output_dir, output_file)
 
     if output_file is None:

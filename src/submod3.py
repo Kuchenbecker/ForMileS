@@ -23,7 +23,7 @@ from tqdm import tqdm
 
 def generate_charged_smiles(FORMULA, CHARGE, input_file, output_file=None):
 
-    output_dir = f"OutputFiles_{FORMULA}" 
+    output_dir = f"OutputFiles_{FORMULA}_Charge_{CHARGE}" 
     output_path = os.path.join(output_dir, output_file)
     input_path = os.path.join(output_dir, input_file)
 
@@ -57,9 +57,9 @@ def generate_charged_smiles(FORMULA, CHARGE, input_file, output_file=None):
 
 ################ Filter the charged SMILES by mass ################
 
-def filter_charged_smiles_by_mass(FORMULA, input_file, TARGET_MASS, tolerance, output_file=None):
+def filter_charged_smiles_by_mass(FORMULA, CHARGE, input_file, TARGET_MASS, tolerance, output_file=None):
     
-    output_dir = f"OutputFiles_{FORMULA}" 
+    output_dir = f"OutputFiles_{FORMULA}_Charge_{CHARGE}" 
     output_path = os.path.join(output_dir, output_file)
     input_path = os.path.join(output_dir, input_file)
     
