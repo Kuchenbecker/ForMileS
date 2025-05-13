@@ -21,10 +21,10 @@ from submod4 import smiles_to_molecules
 #
 #
 #
-FORMULA = "C6O2"
-PRECURSOR_FEATURE = "C-C-C-O-C-C"
-CHARGE = 1
-TARGET_MASS = 117.092
+FORMULA = "C3O1"
+PRECURSOR_FEATURES = ["C-C-C-O", "C=C-C"]
+CHARGE = +1
+TARGET_MASS = 59.05
 #
 #
 #
@@ -56,7 +56,7 @@ generate_smiles(FORMULA, CHARGE, f"nSMILES_{FORMULA}.txt")
 
 print("Checking heritage with precursor molecule")
 print("Generating filtered by heritage SMILES")
-filter_smiles(f"nSMILES_{FORMULA}.txt", FORMULA, CHARGE, PRECURSOR_FEATURE, f"ParentRelatedSMILES_{FORMULA}.txt")
+filter_smiles(f"nSMILES_{FORMULA}.txt", FORMULA, CHARGE, PRECURSOR_FEATURES, f"ParentRelatedSMILES_{FORMULA}.txt")
  
 print("Generating charged SMILES from ParentRelatedSMILES")
 print("Filtering charged SMILES by mass")
