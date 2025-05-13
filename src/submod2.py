@@ -27,13 +27,16 @@ def is_linear_chain(mol):
     return num_ends == 2 and (num_ends + num_middle == len(degrees))
 
 
-def contains_feature(mol, PRECURSOR_FEATURE):
+def contains_feature(mol, PRECURSOR_FEATURES):
     """Check for Precursor Chemical Feature using SMARTS rules"""
-    coc_pattern = Chem.MolFromSmarts(PRECURSOR_FEATURE)
-    return mol.HasSubstructMatch(coc_pattern)
+    for feature in PRECURSOR_FEATURES:
+        pattern = Chem.MolFromSmarts(feature)
+        if pattern and mol.HasSubstructMatch(pattern):
+            return True
+    return False
 
 
-def filter_smiles(input_file, FORMULA, CHARGE, PRECURSOR_FEATURE, output_file=None):
+def filter_smiles(input_file, FORMULA, CHARGE, PRECURSOR_FEATURES, output_file=None):
 
     output_dir = f"OutputFiles_{FORMULA}_Charge_{CHARGE}"
     output_path = os.path.join(output_dir, output_file)
@@ -50,7 +53,7 @@ def filter_smiles(input_file, FORMULA, CHARGE, PRECURSOR_FEATURE, output_file=No
         mol = Chem.MolFromSmiles(smi)
         if mol is None:
             continue
-        if contains_feature(mol, PRECURSOR_FEATURE) and is_linear_chain(mol):
+        if contains_feature(mol, PRECURSOR_FEATURES) and is_linear_chain(mol):
             filtered.append(smi)
 
     # Save results
