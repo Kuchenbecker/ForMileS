@@ -7,19 +7,17 @@
 
 from rdkit import Chem
 from rdkit.Chem import rdMolDescriptors
-from rdkit.Chem import rdqueries
-from rdkit.Chem.rdMolDescriptors import CalcNumRings
 from tqdm import tqdm
 import os
 
 
-def is_linear_chain(mol):
-    """Check if molecule is a linear (non-cyclic, non-branched) chain."""
-    # Must be a tree (no cycles)
-    if mol.GetRingInfo().NumRings() > 0:
-        return False
-
-    # Linear means: only two atoms with degree 1 (ends), all others degree 2
+def is_linear(mol):
+    """
+    Check if molecule is a linear (non-cyclic, non-branched) chain.
+    Conditions:
+    - Acyclic (no rings)
+    - Exactly two terminal atoms (degree 1), all others degree 2
+    """
     degrees = [atom.GetDegree() for atom in mol.GetAtoms()]
     num_ends = degrees.count(1)
     num_middle = degrees.count(2)
@@ -28,7 +26,7 @@ def is_linear_chain(mol):
 
 
 def contains_feature(mol, PRECURSOR_FEATURES):
-    """Check for Precursor Chemical Feature using SMARTS rules"""
+    """Check for precursor chemical features using SMARTS rules."""
     for feature in PRECURSOR_FEATURES:
         pattern = Chem.MolFromSmarts(feature)
         if pattern and mol.HasSubstructMatch(pattern):
@@ -36,14 +34,18 @@ def contains_feature(mol, PRECURSOR_FEATURES):
     return False
 
 
-def filter_smiles(input_file, FORMULA, CHARGE, PRECURSOR_FEATURES, output_file=None):
+def filter_smiles(input_file, FORMULA, CHARGE, PRECURSOR_FEATURES, output_file=None, branched=True, ring=True):
+    """
+    Filters SMILES strings based on precursor features and structure rules.
 
+    Parameters:
+    - branched (bool): If False, only linear (non-branched) chains are accepted.
+    - ring (bool): If False, cyclic molecules are rejected.
+    """
     output_dir = f"OutputFiles_{FORMULA}_Charge_{CHARGE}"
-    output_path = os.path.join(output_dir, output_file)
+    output_path = os.path.join(output_dir, output_file if output_file else f"ParentRelatedSMILES_{FORMULA}.txt")
     input_path = os.path.join(output_dir, input_file)
 
-    if output_file is None:
-        output_file = f"ParentRelatedSMILES_{FORMULA}.txt"
     with open(input_path, "r") as f:
         smiles_list = [line.strip() for line in f if line.strip()]
 
@@ -53,10 +55,16 @@ def filter_smiles(input_file, FORMULA, CHARGE, PRECURSOR_FEATURES, output_file=N
         mol = Chem.MolFromSmiles(smi)
         if mol is None:
             continue
-        if contains_feature(mol, PRECURSOR_FEATURES) and is_linear_chain(mol):
+
+        if not ring and mol.GetRingInfo().NumRings() > 0:
+            continue
+
+        if not branched and not is_linear(mol):
+            continue
+
+        if contains_feature(mol, PRECURSOR_FEATURES):
             filtered.append(smi)
 
-    # Save results
     with open(output_path, "w") as f:
         for smi in filtered:
             f.write(smi + "\n")
