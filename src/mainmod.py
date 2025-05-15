@@ -25,6 +25,8 @@ FORMULA = "C4O2"
 PRECURSOR_FEATURES = ["C-O-C-C-C", "C-O-C-C-C-O"]
 CHARGE = +1
 TARGET_MASS = 89.060
+branched=True
+ring=True
 #
 #
 #
@@ -56,7 +58,7 @@ generate_smiles(FORMULA, CHARGE, f"nSMILES_{FORMULA}.txt")
 
 print("Checking heritage with precursor molecule")
 print("Generating filtered by heritage SMILES")
-filter_smiles(f"nSMILES_{FORMULA}.txt", FORMULA, CHARGE, PRECURSOR_FEATURES, f"ParentRelatedSMILES_{FORMULA}.txt")
+filter_smiles(f"nSMILES_{FORMULA}.txt", FORMULA, CHARGE, PRECURSOR_FEATURES, branched, ring, f"ParentRelatedSMILES_{FORMULA}.txt")
  
 print("Generating charged SMILES from ParentRelatedSMILES")
 print("Filtering charged SMILES by mass")

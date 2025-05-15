@@ -34,7 +34,7 @@ def contains_feature(mol, PRECURSOR_FEATURES):
     return False
 
 
-def filter_smiles(input_file, FORMULA, CHARGE, PRECURSOR_FEATURES, output_file=None, branched=True, ring=True):
+def filter_smiles(input_file, FORMULA, CHARGE, PRECURSOR_FEATURES, branched, ring, output_file=None):
     """
     Filters SMILES strings based on precursor features and structure rules.
 
