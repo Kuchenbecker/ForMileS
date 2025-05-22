@@ -22,11 +22,11 @@ from submod4 import smiles_to_molecules
 #
 #
 FORMULA = "C4O2"
-PRECURSOR_FEATURES = ["C-O-C-C-C", "C-O-C-C-C-O"]
+PRECURSOR_FEATURES = ["C-O-C-C-C-O","C-O-C-C-C=O"]
 CHARGE = +1
 TARGET_MASS = 89.060
-branched=True
-ring=True
+branched=False
+ring=False
 #
 #
 #
