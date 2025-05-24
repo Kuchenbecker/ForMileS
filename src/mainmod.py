@@ -21,12 +21,12 @@ from submod4 import smiles_to_molecules
 #
 #
 #
-FORMULA = "C4O2"
-PRECURSOR_FEATURES = ["C-O-C-C-C", "C-O-C-C-C-O"]
+FORMULA = "C5O2"
+PRECURSOR_FEATURES = ["COCCOC"]
 CHARGE = +1
-TARGET_MASS = 89.060
+TARGET_MASS = 105.0336
 branched=True
-ring=True
+ring=False
 #
 #
 #
@@ -63,7 +63,7 @@ filter_smiles(f"nSMILES_{FORMULA}.txt", FORMULA, CHARGE, PRECURSOR_FEATURES, bra
 print("Generating charged SMILES from ParentRelatedSMILES")
 print("Filtering charged SMILES by mass")
 generate_charged_smiles(FORMULA, CHARGE, f"ParentRelatedSMILES_{FORMULA}.txt", f"chargedSMILES_{FORMULA}.txt")
-filter_charged_smiles_by_mass(FORMULA, CHARGE, f"chargedSMILES_{FORMULA}.txt", TARGET_MASS, 0.05, f"filteredchargedSMILES_{FORMULA}.txt")
+filter_charged_smiles_by_mass(FORMULA, CHARGE, f"chargedSMILES_{FORMULA}.txt", TARGET_MASS, 0.5, f"filteredchargedSMILES_{FORMULA}.txt")
 
 print("Generating charged molecules properties calculations and images")
 smiles_to_molecules(FORMULA, CHARGE, f"filteredchargedSMILES_{FORMULA}.txt")
