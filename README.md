@@ -1,6 +1,6 @@
 # ForMileS v2.5. 
 -- acronymn for Formation of Mass SMILES --
-![Logotype](ForMileS Logotype.png)
+![Logotype](ForMileS/ForMileS Logotype.png)
 
 Created by Vinicius Kuchenbecker (1) in association with UNICAMP.
 (1) vincius.kuchenbecker@gmail.com
