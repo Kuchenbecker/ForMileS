@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import threading
 import os
+import multiprocessing
 from PIL import ImageTk, Image
 
 from submod1 import generate_smiles
@@ -24,12 +25,16 @@ def run_formiles(as_svg=False):
         features = features_text.get("1.0", "end").strip().split("\n")
         is_branched = branched_var.get()
         has_ring = ring_var.get()
+        try:
+            num_processes = min(max(1, int(cores_var.get())), multiprocessing.cpu_count())
+        except:
+            num_processes = 1
 
         output_dir = f"OutputFiles_{formula}_Charge_{charge}"
         os.makedirs(output_dir, exist_ok=True)
 
         update_progress(5)
-        generate_smiles(formula, charge, f"nSMILES_{formula}.txt")
+        generate_smiles(formula, charge, f"nSMILES_{formula}.txt", num_processes)
         update_progress(25)
 
         filter_smiles(f"nSMILES_{formula}.txt", formula, charge, features, is_branched, has_ring, f"ParentRelatedSMILES_{formula}.txt")
@@ -91,38 +96,53 @@ def show_images():
 root = tk.Tk()
 root.title("ForMileS - Formation of Mass SMILES")
 
-ttk.Label(root, text="Molecular Formula (e.g., C4O2):").grid(row=0, column=0, sticky="w")
-formula_entry = ttk.Entry(root, width=30)
-formula_entry.grid(row=0, column=1)
+# Create main frame
+mainframe = ttk.Frame(root, padding="10")
+mainframe.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
 
-ttk.Label(root, text="Charge (+1 or -1):").grid(row=1, column=0, sticky="w")
-charge_entry = ttk.Entry(root, width=30)
-charge_entry.grid(row=1, column=1)
+# Input fields
+ttk.Label(mainframe, text="Molecular Formula (e.g., C4O2):").grid(row=0, column=0, sticky="w", pady=5)
+formula_entry = ttk.Entry(mainframe, width=30)
+formula_entry.grid(row=0, column=1, pady=5)
 
-ttk.Label(root, text="Target Mass (e.g., 89.060):").grid(row=2, column=0, sticky="w")
-mass_entry = ttk.Entry(root, width=30)
-mass_entry.grid(row=2, column=1)
+ttk.Label(mainframe, text="Charge (+1 or -1):").grid(row=1, column=0, sticky="w", pady=5)
+charge_entry = ttk.Entry(mainframe, width=30)
+charge_entry.grid(row=1, column=1, pady=5)
 
-ttk.Label(root, text="Precursor SMARTS (one per line):").grid(row=3, column=0, sticky="nw")
-features_text = tk.Text(root, width=30, height=5)
-features_text.grid(row=3, column=1)
+ttk.Label(mainframe, text="Target Mass (e.g., 89.060):").grid(row=2, column=0, sticky="w", pady=5)
+mass_entry = ttk.Entry(mainframe, width=30)
+mass_entry.grid(row=2, column=1, pady=5)
 
+ttk.Label(mainframe, text="Precursor SMARTS (one per line):").grid(row=3, column=0, sticky="nw", pady=5)
+features_text = tk.Text(mainframe, width=30, height=5)
+features_text.grid(row=3, column=1, pady=5)
+
+# Checkboxes
 branched_var = tk.BooleanVar(value=False)
 ring_var = tk.BooleanVar(value=False)
 svg_var = tk.BooleanVar(value=False)
 
-ttk.Checkbutton(root, text="Allow Branched", variable=branched_var).grid(row=4, column=0, sticky="w")
-ttk.Checkbutton(root, text="Allow Rings", variable=ring_var).grid(row=4, column=1, sticky="w")
-ttk.Checkbutton(root, text="Generate SVG instead of PNG", variable=svg_var).grid(row=5, column=0, columnspan=2, sticky="w")
+ttk.Checkbutton(mainframe, text="Allow Branched", variable=branched_var).grid(row=4, column=0, sticky="w", pady=5)
+ttk.Checkbutton(mainframe, text="Allow Rings", variable=ring_var).grid(row=4, column=1, sticky="w", pady=5)
 
-ttk.Button(root, text="Run ForMileS", command=run_formiles_threaded).grid(row=6, column=0, columnspan=2, pady=10)
+# CPU cores selection
+max_cores = multiprocessing.cpu_count()
+ttk.Label(mainframe, text=f"CPU Cores (1-{max_cores}):").grid(row=5, column=0, sticky="w", pady=5)
+cores_var = tk.StringVar(value=str(max(1, max_cores//2)))
+cores_entry = ttk.Entry(mainframe, width=5, textvariable=cores_var)
+cores_entry.grid(row=5, column=1, sticky="w", pady=5)
+
+ttk.Checkbutton(mainframe, text="Generate SVG instead of PNG", variable=svg_var).grid(row=6, column=0, columnspan=2, sticky="w", pady=5)
+
+# Buttons
+ttk.Button(mainframe, text="Run ForMileS", command=run_formiles_threaded).grid(row=7, column=0, columnspan=2, pady=10)
 
 # Progress bar
 progress_var = tk.DoubleVar()
-progress = ttk.Progressbar(root, variable=progress_var, maximum=100)
-progress.grid(row=7, column=0, columnspan=2, pady=10, sticky="ew")
+progress = ttk.Progressbar(mainframe, variable=progress_var, maximum=100)
+progress.grid(row=8, column=0, columnspan=2, pady=10, sticky="ew")
 
 # Show Images button
-ttk.Button(root, text="Show Images Output", command=show_images).grid(row=8, column=0, columnspan=2, pady=5)
+ttk.Button(mainframe, text="Show Images Output", command=show_images).grid(row=9, column=0, columnspan=2, pady=5)
 
 root.mainloop()

@@ -1,20 +1,17 @@
 #########################################################################
-# This module is the heart of the program. It generates all graphs      #
-# using graph theory and Ullmann's Alogorithm within NetworkX.          #
-# Atoms are nodes and bonds are arests. This module generate the list   #
-# will be used by all the other modules.                                #
+# This module generates molecular graphs using graph theory and          #
+# NetworkX, with multiprocessing support for improved performance       #
 #########################################################################
 
 import networkx as nx
-import matplotlib.pyplot as plt
-import numpy as np
 import math
 import os
+from functools import lru_cache
+from multiprocessing import Pool, cpu_count
+from itertools import combinations, product
 
 from rdkit import Chem
 from rdkit.Chem import Descriptors
-from itertools import combinations, product
-from rdkit.Chem import Draw
 from rdkit.Chem.rdMolDescriptors import CalcMolFormula
 from tqdm import tqdm 
 
@@ -33,6 +30,7 @@ max_valence = {
 ####### Functions for SMILES Generation #######
 
 def parse_formula(FORMULA):
+    """Parse chemical formula into list of atoms"""
     import re
     elements = re.findall(r'([A-Z][a-z]*)(\d*)', FORMULA)
     atoms = []
@@ -41,7 +39,19 @@ def parse_formula(FORMULA):
         atoms.extend([elem] * count)
     return atoms
 
-def is_valid(graph):
+@lru_cache(maxsize=100000)
+def is_valid_cached(graph_hash):
+    """Cached validity check using graph hashes"""
+    elements, edges = graph_hash
+    g = nx.Graph()
+    for i, elem in elements:
+        g.add_node(i, element=elem)
+    for i, j, order in edges:
+        g.add_edge(i, j, order=order)
+    return is_valid_uncached(g)
+
+def is_valid_uncached(graph):
+    """Original validity check without caching"""
     for node in graph.nodes:
         atom = graph.nodes[node]['element']
         valence = sum(data['order'] for _, _, data in graph.edges(node, data=True))
@@ -49,13 +59,26 @@ def is_valid(graph):
             return False
     return True
 
+def is_valid(graph):
+    """Wrapper function that uses caching"""
+    graph_hash = graph_to_hash(graph)
+    return is_valid_cached(graph_hash)
+
+def graph_to_hash(g):
+    """Create unique hashable representation of graph"""
+    elements = tuple(sorted((i, g.nodes[i]['element']) for i in g.nodes))
+    edges = tuple(sorted((i, j, g[i][j]['order']) for i, j in g.edges))
+    return (elements, edges)
+
 def atoms_graph(atoms):
+    """Create base graph from atoms"""
     G = nx.Graph()
     for i, atom in enumerate(atoms):
         G.add_node(i, element=atom)
     return G
 
 def expand_bond_orders(graph):
+    """Generate all possible bond order combinations"""
     graphs = []
     edges = list(graph.edges(data=True))
     bond_options = []
@@ -71,39 +94,65 @@ def expand_bond_orders(graph):
         graphs.append(g)
     return graphs
 
-def generate_graphs_lazy(atoms):
+def generate_graphs_lazy_worker(args):
+    """Worker function for parallel processing"""
+    edge_comb, atoms = args
+    G_base = atoms_graph(atoms)
+    g = G_base.copy()
+    valid = True
+
+    for (i, j) in edge_comb:
+        a1, a2 = g.nodes[i]['element'], g.nodes[j]['element']
+        if (a1, a2) in bond_orders or (a2, a1) in bond_orders:
+            g.add_edge(i, j, order=1)
+        else:
+            valid = False
+            break
+
+    results = []
+    if valid and nx.is_tree(g) and is_valid(g):
+        expanded = expand_bond_orders(g)
+        for eg in expanded:
+            if is_valid(eg):
+                results.append(eg)
+    return results
+
+def generate_graphs_lazy(atoms, num_processes=1):
+    """Generate molecular graphs with optional multiprocessing"""
     G_base = atoms_graph(atoms)
     n = len(atoms)
     possible_edges = list(combinations(range(n), 2))
     total_combinations = math.comb(len(possible_edges), n - 1)
-
-    for edge_comb in tqdm(combinations(possible_edges, n - 1), total=total_combinations, desc="Generating graphs"):
-        g = G_base.copy()
-        valid = True
-
-        for (i, j) in edge_comb:
-            a1, a2 = g.nodes[i]['element'], g.nodes[j]['element']
-            if (a1, a2) in bond_orders or (a2, a1) in bond_orders:
-                g.add_edge(i, j, order=1)
-            else:
-                valid = False
-                break
-
-        # Avoid cyclic graphs and prune early
-        if valid and nx.is_tree(g) and is_valid(g):
-            expanded = expand_bond_orders(g)
-            for eg in expanded:
-                if is_valid(eg):
-                    yield eg  
-
+    
+    if num_processes <= 1:
+        # Single-process version
+        for edge_comb in tqdm(combinations(possible_edges, n - 1), 
+                          total=total_combinations, 
+                          desc="Generating graphs"):
+            for result in generate_graphs_lazy_worker((edge_comb, atoms)):
+                yield result
+    else:
+        # Multiprocessing version
+        chunk_size = max(1, total_combinations // (num_processes * 10))
+        with Pool(num_processes) as pool:
+            for results in tqdm(pool.imap_unordered(
+                generate_graphs_lazy_worker,
+                ((comb, atoms) for comb in combinations(possible_edges, n - 1)),
+                chunksize=chunk_size,
+                total=total_combinations
+            ), total=total_combinations, desc="Generating graphs"):
+                for result in results:
+                    yield result
 
 def number_to_bondtype(order):
+    """Convert bond order number to RDKit bond type"""
     if order == 1: return Chem.BondType.SINGLE
     if order == 2: return Chem.BondType.DOUBLE
     if order == 3: return Chem.BondType.TRIPLE
     raise ValueError("Invalid bond order")
 
 def graph_to_rdkit_mol(graph):
+    """Convert NetworkX graph to RDKit molecule"""
     rw_mol = Chem.RWMol()
     node_to_idx = {}
     for node in graph.nodes:
@@ -114,14 +163,17 @@ def graph_to_rdkit_mol(graph):
         rw_mol.AddBond(node_to_idx[i], node_to_idx[j], number_to_bondtype(data['order']))
     return rw_mol
 
-def generate_smiles(FORMULA, CHARGE, output_file=None):
+def generate_smiles(FORMULA, CHARGE, output_file=None, num_processes=1):
+    """Main function to generate SMILES with multiprocessing support"""
     output_dir = f"OutputFiles_{FORMULA}_Charge_{CHARGE}"
-    output_path = os.path.join(output_dir, output_file)
-
+    os.makedirs(output_dir, exist_ok=True)
+    
     if output_file is None:
         output_file = f"nSMILES_{FORMULA}.txt"
+    output_path = os.path.join(output_dir, output_file)
+    
     atoms = parse_formula(FORMULA)
-    graphs = generate_graphs_lazy(atoms)
+    graphs = generate_graphs_lazy(atoms, num_processes)
     smiles_set = set()
 
     for g in tqdm(graphs, desc="Converting to SMILES"):
