@@ -21,11 +21,11 @@ from submod4 import smiles_to_molecules
 #
 #
 #
-FORMULA = "C5O2"
-PRECURSOR_FEATURES = ["COCCOC"]
+FORMULA = "C6O2"
+PRECURSOR_FEATURES = ["CCCOCCCO"]
 CHARGE = +1
-TARGET_MASS = 105.0336
-branched=True
+TARGET_MASS = 117.092
+branched=False
 ring=False
 #
 #

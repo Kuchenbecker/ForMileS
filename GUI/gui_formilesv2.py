@@ -6,10 +6,10 @@ import time
 from PIL import ImageTk, Image
 import sys
 
-from submod1 import generate_smiles
-from submod2 import filter_smiles
-from submod3 import generate_charged_smiles, filter_charged_smiles_by_mass
-from submod4 import smiles_to_molecules
+from gui_submod1 import generate_smiles
+from gui_submod2 import filter_smiles
+from gui_submod3 import generate_charged_smiles, filter_charged_smiles_by_mass
+from gui_submod4 import smiles_to_molecules
 
 # Global variables
 generated_images = []
@@ -54,27 +54,35 @@ def format_time(seconds):
         return f"{seconds//3600:.0f}h {(seconds%3600)//60:.0f}m"
 
 def update_progress(value, status_text="", current=None, total=None):
-    progress_var.set(value)
-    progress_label.config(text=f"Progress: {int(value)}%")
-    if status_text:
+    # Only update if significant change or new status
+    if abs(value - progress_var.get()) > 1 or status_text != status_label.cget("text"):
+        progress_var.set(value)
+        progress_label.config(text=f"Progress: {int(value)}%")
         status_label.config(text=f"Status: {status_text}")
     
-    elapsed = time.time() - start_time
-    runtime_label.config(text=f"Runtime: {format_time(elapsed)}")
-    
-    if current is not None and total is not None and current > 0:
-        rate = current / elapsed if elapsed > 0 else 0
-        remaining = (total - current) / rate if rate > 0 else 0
+    # Update time metrics less frequently
+    if current is None or current % 100 == 0:
+        elapsed = time.time() - start_time
+        runtime_label.config(text=f"Runtime: {format_time(elapsed)}")
         
-        eta_label.config(text=f"ETA: {format_time(remaining)}")
-        rate_label.config(text=f"Speed: {rate:.1f} it/s")
+        if current is not None and total is not None and current > 0:
+            rate = current / elapsed if elapsed > 0 else 0
+            remaining = (total - current) / rate if rate > 0 else 0
+            eta_label.config(text=f"ETA: {format_time(remaining)}")
+            rate_label.config(text=f"Speed: {rate:.1f} it/s")
     
-    root.update_idletasks()
+    # Throttle UI updates
+    if current is None or current % 10 == 0:
+        root.update_idletasks()
 
 def run_formiles(as_svg=False):
     global stop_requested, start_time
     stop_requested = False
     start_time = time.time()
+    
+    # Disable GUI updates during heavy computation
+    root.config(cursor="watch")
+    root.update()
     
     eta_label.config(text="ETA: --")
     rate_label.config(text="Speed: -- it/s")
@@ -133,6 +141,10 @@ def run_formiles(as_svg=False):
     except Exception as e:
         messagebox.showerror("Error", f"Something went wrong:\n{str(e)}")
         update_progress(0, "Idle")
+    finally:
+        # Re-enable GUI
+        root.config(cursor="")
+        root.update()
 
 def run_formiles_threaded():
     global formiles_thread, stop_requested
