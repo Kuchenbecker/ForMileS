@@ -16,7 +16,7 @@ def contains_feature(mol, PRECURSOR_FEATURES):
     return False
 
 def filter_smiles(input_file, FORMULA, CHARGE, PRECURSOR_FEATURES, branched, ring, output_file=None,
-                  should_stop=lambda: False, update_callback=None):
+                 should_stop=None, update_callback=None):
     output_dir = f"OutputFiles_{FORMULA}_Charge_{CHARGE}"
     output_path = os.path.join(output_dir, output_file or f"ParentRelatedSMILES_{FORMULA}.txt")
     input_path = os.path.join(output_dir, input_file)
@@ -26,27 +26,30 @@ def filter_smiles(input_file, FORMULA, CHARGE, PRECURSOR_FEATURES, branched, rin
 
     filtered = []
     total = len(smiles_list)
+    BATCH_SIZE = 1000
+    UPDATE_FREQ = max(100, total // 100)
 
-    for i, smi in enumerate(smiles_list):
-        if should_stop():
-            print("Stopped during filtering.")
+    for i in range(0, total, BATCH_SIZE):
+        batch = smiles_list[i:i+BATCH_SIZE]
+        for smi in batch:
+            mol = Chem.MolFromSmiles(smi)
+            if mol is None:
+                continue
+
+            if not ring and mol.GetRingInfo().NumRings() > 0:
+                continue
+            if not branched and not is_linear(mol):
+                continue
+            if contains_feature(mol, PRECURSOR_FEATURES):
+                filtered.append(smi)
+
+        if should_stop and should_stop():
             break
-
-        mol = Chem.MolFromSmiles(smi)
-        if mol is None:
-            continue
-
-        if not ring and mol.GetRingInfo().NumRings() > 0:
-            continue
-        if not branched and not is_linear(mol):
-            continue
-        if contains_feature(mol, PRECURSOR_FEATURES):
-            filtered.append(smi)
-
-        if update_callback and (i % 10 == 0 or i == total - 1):
-            update_callback(i + 1, total)
+            
+        if update_callback:
+            update_callback(min(i + BATCH_SIZE, total), total)
 
     with open(output_path, "w") as f:
-        for smi in filtered:
-            f.write(smi + "\n")
+        f.write("\n".join(filtered))
+    
     print(f"Saved {len(filtered)} filtered SMILES to '{output_path}'")

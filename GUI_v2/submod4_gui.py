@@ -1,4 +1,3 @@
-# Updated submod4.py to generate both PNG and SVG
 from rdkit import Chem
 from rdkit.Chem import Draw
 from rdkit.Chem import Descriptors
@@ -6,16 +5,19 @@ from PIL import Image, ImageDraw, ImageFont
 import os
 import re
 
-IMG_SIZE = (300, 200)
-ANNOTATION_HEIGHT = 60
+# Image configuration
+IMG_SIZE = (300, 200)       # Molecule image size
+ANNOTATION_HEIGHT = 60      # Space for text below image
 FONT_SIZE = 14
 
 def sanitize_filename(smiles):
+    """Replaces special characters to make SMILES safe for filenames."""
     return re.sub(r'[^a-zA-Z0-9._-]', '_', smiles)
 
-def smiles_to_molecules(FORMULA, CHARGE, input_file, as_svg=False):
+def smiles_to_molecules(FORMULA, CHARGE, input_file):
     output_dir = f"OutputFiles_{FORMULA}_Charge_{CHARGE}"
     input_path = os.path.join(output_dir, input_file)
+
     os.makedirs(output_dir, exist_ok=True)
 
     with open(input_path, "r") as f:
@@ -23,7 +25,6 @@ def smiles_to_molecules(FORMULA, CHARGE, input_file, as_svg=False):
 
     molecules = []
     data = []
-    image_paths = []
     seen_canonical_smiles = set()
 
     for idx, smiles in enumerate(smiles_list):
@@ -40,16 +41,15 @@ def smiles_to_molecules(FORMULA, CHARGE, input_file, as_svg=False):
             data.append((smiles, mass, formula))
             molecules.append(mol)
 
-            safe_smiles = sanitize_filename(smiles)
-            png_path = os.path.join(output_dir, f"mol_{idx + 1}_{safe_smiles}.png")
-            svg_path = os.path.join(output_dir, f"mol_{idx + 1}_{safe_smiles}.svg")
-
-            # Generate PNG
+            # Generate molecule image
             mol_img = Draw.MolToImage(mol, size=IMG_SIZE)
+
+            # Create annotated image canvas
             total_height = IMG_SIZE[1] + ANNOTATION_HEIGHT
             annotated_img = Image.new("RGB", (IMG_SIZE[0], total_height), "white")
             annotated_img.paste(mol_img, (0, 0))
 
+            # Draw annotations
             draw = ImageDraw.Draw(annotated_img)
             try:
                 font = ImageFont.truetype("arial.ttf", FONT_SIZE)
@@ -58,6 +58,7 @@ def smiles_to_molecules(FORMULA, CHARGE, input_file, as_svg=False):
 
             annotation1 = f"{formula} | Mass: {mass}"
             annotation2 = smiles
+
             text_y = IMG_SIZE[1] + 5
             for text in [annotation1, annotation2]:
                 bbox = draw.textbbox((0, 0), text, font=font)
@@ -66,22 +67,17 @@ def smiles_to_molecules(FORMULA, CHARGE, input_file, as_svg=False):
                 draw.text((x_text, text_y), text, fill="black", font=font)
                 text_y += FONT_SIZE + 2
 
-            annotated_img.save(png_path)
-            image_paths.append(png_path)
-            print(f"Saved PNG: {png_path}")
 
-            # Generate SVG
-            drawer = Draw.MolDraw2DSVG(IMG_SIZE[0], IMG_SIZE[1])
-            drawer.DrawMolecule(mol)
-            drawer.FinishDrawing()
-            svg = drawer.GetDrawingText()
-            with open(svg_path, "w") as f:
-                f.write(svg)
-            print(f"Saved SVG: {svg_path}")
+            # Safe filename using SMILES
+            safe_smiles = sanitize_filename(smiles)
+            filename = f"mol_{idx + 1}_{safe_smiles}.png"
+            output_path = os.path.join(output_dir, filename)
+            annotated_img.save(output_path)
+            print(f"Saved: {output_path}")
         else:
             print(f"Warning: Could not parse SMILES '{smiles}'")
 
     if not molecules:
         print("No valid molecules to display.")
 
-    return molecules, data, image_paths
+    return molecules, data
