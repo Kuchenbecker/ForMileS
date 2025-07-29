@@ -21,10 +21,17 @@ from submod4 import smiles_to_molecules
 #
 #
 #
+<<<<<<< HEAD
 FORMULA = "C6O2"
 PRECURSOR_FEATURES = ["CCCOCCCO"]
 CHARGE = +1
 TARGET_MASS = 117.092
+=======
+FORMULA = "C4O2"
+PRECURSOR_FEATURES = ["C-O-C-C-C-O","C-O-C-C-C=O"]
+CHARGE = +1
+TARGET_MASS = 89.060
+>>>>>>> 965c5a91956b851a1a46d64358e56db8b3aae644
 branched=False
 ring=False
 #
