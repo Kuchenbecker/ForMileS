@@ -19,10 +19,10 @@ from PIL import Image, ImageDraw, ImageFont
 from tqdm import tqdm
 
 ############################## INPUTS ###########################################
-FORMULA = "C4N2O3"
-PRECURSOR_SMARTS = "NCC(=O)NCC(=O)O"
-CHARGE = +2
-TARGET_MASS = 134.069
+FORMULA = "C9O3"
+PRECURSOR_SMARTS = "CCCOCCCOCCCO"
+CHARGE = +1
+TARGET_MASS = 175.133
 TOLERANCE = 0.5
 PARAM_FILE = "parameters.json"
 OUTPUT_DIR = f"OutputFiles_{FORMULA}_Charge_{CHARGE}"
