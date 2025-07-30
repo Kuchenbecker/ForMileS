@@ -2,8 +2,7 @@
 -- acronymn for Formation of Mass SMILES --
 ![Logotype](ForMileS/ForMileS Logotype.png)
 
-Created by Vinicius Kuchenbecker (1) in association with UNICAMP.
-(1) vincius.kuchenbecker@gmail.com
+Author: Vinicius Kuchenbecker
 
 In ESI-Tandem MS/MS experiments, one may know the precursor molecular formula, charge state (generally positive) and structure.
 After collision, MS spectra will give two main informations: Exact mass of fragment ion and charge state (positive or negative).
@@ -17,20 +16,6 @@ Hence, it is suited for cases in which one is in position of parsing this inform
 
 #############################################################################
 
-Inputs of the program:
-1. FORMULA
-2. PRECURSOR_FEATURE
-3. CHARGE
-4. EXACT_MASS
-
-User must to give this inside **main.py** script.
-
-**main.py** will work calling four separated modules that will generate the final wanted result.
-
-For futher detailing how each submodule works and what should or not be altered, refer to documentation.
-Some comments about usage are also within each module or submodule.
-
-This version is configured to be used with C and O positive charged molecules. Also is configured in Module 1 and 2 to avoid cyclic molecules. Don't forget to check it.
-
-Any comment, help or suggestion, adress the e-mail.
-
+Version 1: Uses extensive numeration method - No GUI
+Version 2: Branch-and-Bound (B&B) with SMARTS - No GUI (CURRENT ONE)
+Version 3: B&B with GUI (IN DEV)
