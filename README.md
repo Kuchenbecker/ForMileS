@@ -16,5 +16,7 @@ Hence, it is suited for cases in which one is in position of parsing this inform
 #############################################################################
 
 Version 1: Uses extensive numeration method - No GUI
+
 Version 2: Branch-and-Bound (B&B) with SMARTS - No GUI (CURRENT ONE)
+
 Version 3: B&B with GUI (IN DEV)
