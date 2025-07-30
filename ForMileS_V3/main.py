@@ -17,16 +17,16 @@ from tqdm import tqdm
 
 ############################## CONFIGURATION ###################################
 
-FORMULA = "C6O2"
-PRECURSOR_SMARTS_LIST = ["CCCOCCCO", "CCCOCCC=O"]
-CHARGE = +1
-TARGET_MASS = 117.092
+FORMULA = "C6N2"
+PRECURSOR_SMARTS_LIST = ["NCCCNCCC"]
+CHARGE = +2
+TARGET_MASS = 118.147
 TOLERANCE = 0.5
 PARAM_FILE = "parameters.json"
 
 SAVE_AS_SVG = True
-SAVE_XYZ_FILE = True
-SAVE_AS_MOL = True
+SAVE_XYZ_FILE = False
+SAVE_AS_MOL = False
 
 OUTPUT_DIR = f"OutputFiles_{FORMULA}_Charge_{CHARGE}"
 IMG_SIZE = (300, 200)
@@ -155,23 +155,31 @@ def run_generation():
     return collected
 
 ############################## ADD CHARGE TO ATOMS #############################
+from itertools import combinations
+
 def generate_charged_smiles(smiles_list):
     charged = []
-    for smi in tqdm(smiles_list, desc="[CHARGE] Adding charge"):
+    for smi in tqdm(smiles_list, desc=f"[CHARGE] Adding {CHARGE}+ charge combinations"):
         mol = Chem.MolFromSmiles(smi)
         if not mol: continue
-        for atom in mol.GetAtoms():
-            if atom.GetSymbol() in charge_elements:
-                mol_copy = RWMol(mol)
-                mol_copy.GetAtomWithIdx(atom.GetIdx()).SetFormalCharge(CHARGE)
-                try:
-                    csmi = Chem.MolToSmiles(mol_copy, canonical=True)
-                    charged.append(csmi)
-                except:
-                    continue
+
+        charge_sites = [atom.GetIdx() for atom in mol.GetAtoms() if atom.GetSymbol() in charge_elements]
+        if len(charge_sites) < CHARGE:
+            continue  # not enough chargeable atoms
+
+        for combo in combinations(charge_sites, CHARGE):
+            mol_copy = RWMol(mol)
+            for idx in combo:
+                mol_copy.GetAtomWithIdx(idx).SetFormalCharge(1)
+            try:
+                csmi = Chem.MolToSmiles(mol_copy, canonical=True)
+                charged.append(csmi)
+            except:
+                continue
+
     path = os.path.join(OUTPUT_DIR, f"chargedSMILES_{FORMULA}.txt")
     with open(path, "w") as f:
-        for c in charged:
+        for c in sorted(set(charged)):
             f.write(c + "\n")
     return charged
 
