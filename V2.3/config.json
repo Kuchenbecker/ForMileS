@@ -1,0 +1,10 @@
+{
+  "FORMULA": "C6O2",
+  "PRECURSOR_SMARTS": "CCCOCCCO",
+  "CHARGE": 1,
+  "TARGET_MASS": 117.092,
+  "TOLERANCE": 0.5,
+  "PARAM_FILE": "parameters.json",
+  "SAVE_XYZ": true,
+  "SAVE_MOL": true
+}
