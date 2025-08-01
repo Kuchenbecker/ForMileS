@@ -1,10 +1,11 @@
 {
   "FORMULA": "C6O2",
-  "PRECURSOR_SMARTS": "CCCOCCCO",
+  "INPUT_SMILES_LIST": ["CCCOCCCO","C=CCOCCCO","CCCOCCC=O"],
   "CHARGE": 1,
   "TARGET_MASS": 117.092,
   "TOLERANCE": 0.5,
   "PARAM_FILE": "parameters.json",
   "SAVE_XYZ": true,
-  "SAVE_MOL": true
+  "SAVE_MOL": true,
+  "SAVE_SVG": true
 }

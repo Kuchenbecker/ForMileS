@@ -1,6 +1,6 @@
 {
     "FORMULA": "C6O2",
-    "PRECURSOR_SMARTS_LIST": ["CCC"],
+    "PRECURSOR_SMARTS_LIST": ["CCCOCCCO"],
     "CHARGE": 1,
     "TARGET_MASS": 117.092,
     "TOLERANCE": 0.5,
