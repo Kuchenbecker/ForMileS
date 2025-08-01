@@ -15,16 +15,22 @@ from rdkit.Chem import Descriptors, Draw
 from rdkit.Chem.rdMolDescriptors import CalcMolFormula
 from rdkit.Chem import RWMol
 from rdkit.Chem.rdchem import BondType
+from rdkit.Chem import AllChem
 from PIL import Image, ImageDraw, ImageFont
 from tqdm import tqdm
 
-############################## INPUTS ###########################################
-FORMULA = "C10N2O2"
-PRECURSOR_SMARTS = "NC1CCCC1"
-CHARGE = +1
-TARGET_MASS = 203.176
-TOLERANCE = 0.5
-PARAM_FILE = "parameters.json"
+############################## LOAD CONFIG ######################################
+with open("config.json") as f:
+    config = json.load(f)
+
+FORMULA = config["FORMULA"]
+PRECURSOR_SMARTS = config["PRECURSOR_SMARTS"]
+CHARGE = config["CHARGE"]
+TARGET_MASS = config["TARGET_MASS"]
+TOLERANCE = config["TOLERANCE"]
+PARAM_FILE = config["PARAM_FILE"]
+SAVE_XYZ = config["SAVE_XYZ"]
+SAVE_MOL = config["SAVE_MOL"]
 OUTPUT_DIR = f"OutputFiles_{FORMULA}_Charge_{CHARGE}"
 
 IMG_SIZE = (300, 200)
@@ -41,8 +47,11 @@ charge_elements = params["charge_elements"]
 
 ######################### UTILS E PARSING #######################################
 def create_output_folder():
-    if not os.path.exists(OUTPUT_DIR):
-        os.makedirs(OUTPUT_DIR)
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    if SAVE_XYZ:
+        os.makedirs(os.path.join(OUTPUT_DIR, "Coordinate_Files"), exist_ok=True)
+    if SAVE_MOL:
+        os.makedirs(os.path.join(OUTPUT_DIR, "Mol_Files"), exist_ok=True)
 
 def parse_formula(formula):
     matches = re.findall(r"([A-Z][a-z]*)(\d*)", formula)
@@ -149,24 +158,27 @@ def run_generation():
 
 ####################### CARGA E FILTRO MASSA ####################################
 def generate_charged_smiles(smiles_list):
-    charged = []
+    charged = set()
     for smi in tqdm(smiles_list, desc="[CHARGE] Adicionando carga"):
         mol = Chem.MolFromSmiles(smi)
-        if not mol: continue
+        if not mol:
+            continue
         for atom in mol.GetAtoms():
             if atom.GetSymbol() in charge_elements:
-                mol_copy = RWMol(mol)
-                mol_copy.GetAtomWithIdx(atom.GetIdx()).SetFormalCharge(CHARGE)
+                mol_copy = Chem.Mol(mol)
+                rw_mol = RWMol(mol_copy)
+                rw_mol.GetAtomWithIdx(atom.GetIdx()).SetFormalCharge(CHARGE)
                 try:
-                    csmi = Chem.MolToSmiles(mol_copy, canonical=True)
-                    charged.append(csmi)
+                    Chem.SanitizeMol(rw_mol)
+                    csmi = Chem.MolToSmiles(rw_mol, canonical=True)
+                    charged.add(csmi)
                 except:
                     continue
     path = os.path.join(OUTPUT_DIR, f"chargedSMILES_{FORMULA}.txt")
     with open(path, "w") as f:
-        for c in charged:
+        for c in sorted(charged):
             f.write(c + "\n")
-    return charged
+    return list(charged)
 
 def filter_by_mass(smiles_list):
     filtered = []
@@ -183,9 +195,6 @@ def filter_by_mass(smiles_list):
     return filtered
 
 ######################### VISUALIZAÇÃO ##########################################
-def sanitize_filename(smiles):
-    return re.sub(r'[^a-zA-Z0-9._-]', '_', smiles)
-
 def smiles_to_images(smiles_list):
     for idx, smiles in enumerate(smiles_list):
         mol = Chem.MolFromSmiles(smiles)
@@ -208,8 +217,25 @@ def smiles_to_images(smiles_list):
         draw.text((10, IMG_SIZE[1] + 5), f"{formula} | {mass}", fill="black", font=font)
         draw.text((10, IMG_SIZE[1] + 25), smiles, fill="black", font=font)
 
-        fname = f"mol_{idx + 1}_{sanitize_filename(smiles)}.png"
+        fname = f"mol_{idx + 1}.png"
         canvas.save(os.path.join(OUTPUT_DIR, fname))
+
+        if SAVE_XYZ:
+            xyz_path = os.path.join(OUTPUT_DIR, "Coordinate_Files", f"mol_{idx + 1}.xyz")
+            try:
+                AllChem.EmbedMolecule(mol)
+                with open(xyz_path, "w") as f:
+                    f.write(Chem.MolToXYZBlock(mol))
+            except:
+                pass
+
+        if SAVE_MOL:
+            mol_path = os.path.join(OUTPUT_DIR, "Mol_Files", f"mol_{idx + 1}.mol")
+            try:
+                with open(mol_path, "w") as f:
+                    f.write(Chem.MolToMolBlock(mol))
+            except:
+                pass
 
 ########################### EXECUÇÃO GERAL ######################################
 if __name__ == "__main__":

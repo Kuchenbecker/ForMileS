@@ -192,9 +192,6 @@ def filter_by_mass(smiles_list):
     return filtered
 
 ######################### VISUALIZAÇÃO ##########################################
-def sanitize_filename(smiles):
-    return re.sub(r'[^a-zA-Z0-9._-]', '_', smiles)
-
 def smiles_to_images(smiles_list):
     for idx, smiles in enumerate(smiles_list):
         mol = Chem.MolFromSmiles(smiles)
@@ -217,11 +214,11 @@ def smiles_to_images(smiles_list):
         draw.text((10, IMG_SIZE[1] + 5), f"{formula} | {mass}", fill="black", font=font)
         draw.text((10, IMG_SIZE[1] + 25), smiles, fill="black", font=font)
 
-        fname = f"mol_{idx + 1}_{sanitize_filename(smiles)}.png"
+        fname = f"mol_{idx + 1}.png"
         canvas.save(os.path.join(OUTPUT_DIR, fname))
 
         if SAVE_XYZ:
-            xyz_path = os.path.join(OUTPUT_DIR, "Coordinate_Files", fname.replace(".png", ".xyz"))
+            xyz_path = os.path.join(OUTPUT_DIR, "Coordinate_Files", f"mol_{idx + 1}.xyz")
             try:
                 AllChem.EmbedMolecule(mol)
                 with open(xyz_path, "w") as f:
@@ -230,7 +227,7 @@ def smiles_to_images(smiles_list):
                 pass
 
         if SAVE_MOL:
-            mol_path = os.path.join(OUTPUT_DIR, "Mol_Files", fname.replace(".png", ".mol"))
+            mol_path = os.path.join(OUTPUT_DIR, "Mol_Files", f"mol_{idx + 1}.mol")
             try:
                 with open(mol_path, "w") as f:
                     f.write(Chem.MolToMolBlock(mol))
