@@ -320,30 +320,64 @@ def filter_by_mass(smiles_list):
 
 ######################### OUTPUT REPORTING ##########################################
 def smiles_to_images(smiles_list):
+    # Create SVG folder if needed
+    if config.get("SAVE_SVG", False):
+        svg_dir = os.path.join(OUTPUT_DIR, "SVG_Files")
+        os.makedirs(svg_dir, exist_ok=True)
+    
     for idx, smiles in enumerate(smiles_list):
         mol = Chem.MolFromSmiles(smiles)
-        if not mol: continue
+        if not mol: 
+            continue
+
+        # Generate 2D coordinates
+        try:
+            AllChem.Compute2DCoords(mol)
+        except:
+            print(f"[WARNING] Failed to generate 2D coordinates for {smiles}")
+            continue
 
         formula = CalcMolFormula(mol)
         mass = f"{Descriptors.ExactMolWt(mol):.4f}"
-        img = Draw.MolToImage(mol, size=IMG_SIZE)
-
-        total_height = IMG_SIZE[1] + ANNOTATION_HEIGHT
-        canvas = Image.new("RGB", (IMG_SIZE[0], total_height), "white")
-        canvas.paste(img, (0, 0))
-
-        draw = ImageDraw.Draw(canvas)
+        
+        # Always generate PNG with annotations
         try:
-            font = ImageFont.truetype("arial.ttf", FONT_SIZE)
-        except:
-            font = ImageFont.load_default()
+            img = Draw.MolToImage(mol, size=IMG_SIZE)
+            total_height = IMG_SIZE[1] + ANNOTATION_HEIGHT
+            canvas = Image.new("RGB", (IMG_SIZE[0], total_height), "white")
+            canvas.paste(img, (0, 0))
 
-        draw.text((10, IMG_SIZE[1] + 5), f"{formula} | {mass}", fill="black", font=font)
-        draw.text((10, IMG_SIZE[1] + 25), smiles, fill="black", font=font)
+            draw = ImageDraw.Draw(canvas)
+            try:
+                font = ImageFont.truetype("arial.ttf", FONT_SIZE)
+            except:
+                font = ImageFont.load_default()
 
-        fname = f"mol_{idx + 1}.png"
-        canvas.save(os.path.join(OUTPUT_DIR, fname))
+            draw.text((10, IMG_SIZE[1] + 5), f"{formula} | {mass}", fill="black", font=font)
+            draw.text((10, IMG_SIZE[1] + 25), smiles, fill="black", font=font)
 
+            fname = f"mol_{idx + 1}.png"
+            canvas.save(os.path.join(OUTPUT_DIR, fname))
+        except Exception as e:
+            print(f"[WARNING] Failed to generate PNG for {smiles}: {str(e)}")
+            continue
+
+        # Optionally generate SVG (just the structure)
+        if config.get("SAVE_SVG", False):
+            try:
+                drawer = Draw.MolDraw2DSVG(IMG_SIZE[0], IMG_SIZE[1])
+                drawer.DrawMolecule(mol)
+                drawer.FinishDrawing()
+                svg_data = drawer.GetDrawingText()
+                
+                svg_path = os.path.join(OUTPUT_DIR, "SVG_Files", f"mol_{idx + 1}.svg")
+                with open(svg_path, "w") as f:
+                    f.write(svg_data)
+            except Exception as e:
+                print(f"[WARNING] Failed to generate SVG for {smiles}: {str(e)}")
+                continue
+
+        # Handle XYZ and MOL files
         if SAVE_XYZ:
             xyz_path = os.path.join(OUTPUT_DIR, "Coordinate_Files", f"mol_{idx + 1}.xyz")
             try:
