@@ -3,10 +3,6 @@
 ###                   ForMileS: Formation of Mass SMILES                      ###
 ###                                                                           ###
 #################################################################################
-# This version implements both MAX_DOUBLE_BONDS and MAX_TRIPLE_BONDS controls   #
-# while maintaining the ALLOW_DOUBLE_BONDS/ALLOW_TRIPLE_BONDS flags for        #
-# compatibility and flexibility.                                               #
-#################################################################################
 
 import os
 import re
@@ -401,7 +397,7 @@ def smiles_to_images(smiles_list):
 
 ########################### MAIN EXECUTION ######################################
 if __name__ == "__main__":
-    print("================== ForMileS v2.3 ==================")
+    print("================== ForMileS v2.5 ==================")
     print(f"Structural Setup: Molecular Branching={ALLOW_BRANCHING}, Cyclic={ALLOW_CYCLES}")
     create_output_folder()
     base_smiles = run_generation()
