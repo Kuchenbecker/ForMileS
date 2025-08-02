@@ -1,8 +1,8 @@
 {
-  "FORMULA": "C3OCl",
-  "MOL_SCAFFOLD": ["CCC"],
-  "CHARGE": 1,
-  "TARGET_MASS": 95.026,
+  "FORMULA": "C7Cl",
+  "MOL_SCAFFOLD": ["C1C=CC=CC=1"],
+  "CHARGE": -1,
+  "TARGET_MASS": 125.016,
   "TOLERANCE": 0.5,
 
   "PARAM_FILE": "parameters.json",
@@ -10,10 +10,10 @@
   "SAVE_MOL": true,
   "SAVE_SVG": true,
 
-  "ALLOW_BRANCHING": false,
-  "ALLOW_CYCLIC": false,
+  "ALLOW_BRANCHING": true,
+  "ALLOW_CYCLES": true,
   "ALLOW_DOUBLE_BONDS": true,
-  "ALLOW_TRIPLE_BONDS": true,
-  "MAX_DOUBLE_BONDS": 2,
+  "ALLOW_TRIPLE_BONDS": false,
+  "MAX_DOUBLE_BONDS": 3,
   "MAX_TRIPLE_BONDS": 2
 }

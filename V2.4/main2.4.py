@@ -280,7 +280,7 @@ def run_generation():
 ####################### CHARGE AND MASS FILTERING ####################################
 def generate_charged_smiles(smiles_list):
     charged = []
-    for smi in tqdm(smiles_list, desc="[CHARGE] Adicionando carga"):
+    for smi in tqdm(smiles_list, desc="[CHARGE] Adding charges...."):
         mol = Chem.MolFromSmiles(smi, sanitize=False)
         if not mol:
             continue
@@ -397,7 +397,7 @@ def smiles_to_images(smiles_list):
 
 ########################### MAIN EXECUTION ######################################
 if __name__ == "__main__":
-    print("================== ForMileS v2.3 ==================")
+    print("================== ForMileS v2.4 ==================")
     print(f"Structural Setup: Molecular Branching={ALLOW_BRANCHING}, Cyclic={ALLOW_CYCLES}")
     create_output_folder()
     base_smiles = run_generation()

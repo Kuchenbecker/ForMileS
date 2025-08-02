@@ -32,8 +32,8 @@ TOLERANCE = config["TOLERANCE"]
 PARAM_FILE = config["PARAM_FILE"]
 SAVE_XYZ = config["SAVE_XYZ"]
 SAVE_MOL = config["SAVE_MOL"]
-ALLOW_BRANCHING = config.get("ALLOW_BRANCHING", True)
-ALLOW_CYCLES = config.get("ALLOW_CYCLES", True)
+ALLOW_BRANCHING = config.get("ALLOW_BRANCHING")
+ALLOW_CYCLES = config.get("ALLOW_CYCLES")
 ALLOW_DOUBLE_BONDS = config.get("ALLOW_DOUBLE_BONDS", True)
 ALLOW_TRIPLE_BONDS = config.get("ALLOW_TRIPLE_BONDS", False)
 MAX_DOUBLE_BONDS = config.get("MAX_DOUBLE_BONDS", 2)
@@ -122,7 +122,7 @@ def is_linear(mol):
 
 def has_cycles(mol):
     """Check if molecule contains any rings"""
-    return Chem.GetSSSR(mol) > 0
+    return mol.GetRingInfo().NumRings() > 0
 
 def count_bond_types(mol):
     """Count number of double and triple bonds in molecule"""
@@ -237,6 +237,7 @@ def grow_recursive(current_mol, target_formula, collected, seen, depth=0):
             for order in get_allowed_bond_orders(pair):
                 try:
                     new_mol = attach_atom(current_mol, atom_symbol, idx, order)
+                    Chem.SanitizeMol(new_mol)  # Sanitize after adding atom
                     grow_recursive(new_mol, target_formula, collected, seen, depth+1)
                 except:
                     continue
@@ -256,12 +257,15 @@ def run_generation():
     
     for smi in precursor_list:
         print(f"[PROCESSING] Building from scaffold: {smi}")
-        base_mol = Chem.MolFromSmiles(smi)
-        if not base_mol:
-            print(f"[WARNING] Invalid SMILES: {smi}")
-            continue
-            
         try:
+            base_mol = Chem.MolFromSmiles(smi)
+            if not base_mol:
+                print(f"[WARNING] Invalid SMILES: {smi}")
+                continue
+                
+            # Sanitize the initial molecule
+            Chem.SanitizeMol(base_mol)
+            
             rw_base = RWMol(base_mol)
             base_mol = rw_base.GetMol()
             grow_recursive(base_mol, target, collected, seen)
@@ -280,7 +284,7 @@ def run_generation():
 ####################### CHARGE AND MASS FILTERING ####################################
 def generate_charged_smiles(smiles_list):
     charged = []
-    for smi in tqdm(smiles_list, desc="[CHARGE] Adicionando carga"):
+    for smi in tqdm(smiles_list, desc="[CHARGE] Adding charge"):
         mol = Chem.MolFromSmiles(smi, sanitize=False)
         if not mol:
             continue
