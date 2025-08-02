@@ -3,8 +3,9 @@
 ###                   ForMileS: Formation of Mass SMILES                      ###
 ###                                                                           ###
 #################################################################################
-# This version explores bond order permutations while maintaining Branch & Bound #
-# principles for efficient structure generation with configurable constraints.   #
+# This version implements both MAX_DOUBLE_BONDS and MAX_TRIPLE_BONDS controls   #
+# while maintaining the ALLOW_DOUBLE_BONDS/ALLOW_TRIPLE_BONDS flags for        #
+# compatibility and flexibility.                                               #
 #################################################################################
 
 import os
@@ -36,6 +37,7 @@ ALLOW_CYCLES = config.get("ALLOW_CYCLES", True)
 ALLOW_DOUBLE_BONDS = config.get("ALLOW_DOUBLE_BONDS", True)
 ALLOW_TRIPLE_BONDS = config.get("ALLOW_TRIPLE_BONDS", False)
 MAX_DOUBLE_BONDS = config.get("MAX_DOUBLE_BONDS", 2)
+MAX_TRIPLE_BONDS = config.get("MAX_TRIPLE_BONDS", 0)  # Default to no triple bonds
 OUTPUT_DIR = f"OutputFiles_{FORMULA}_Charge_{CHARGE}"
 
 IMG_SIZE = (300, 200)
@@ -82,7 +84,7 @@ def is_deficit_valid(deficit):
 def valence_ok(mol):
     for atom in mol.GetAtoms():
         symbol = atom.GetSymbol()
-        valence = sum([b.GetBondTypeAsDouble() for b in atom.GetBonds()])
+        valence = atom.GetTotalValence()  # More reliable method
         if valence > max_valence.get(symbol, 4):
             return False
     return True
@@ -122,24 +124,27 @@ def has_cycles(mol):
     """Check if molecule contains any rings"""
     return Chem.GetSSSR(mol) > 0
 
-def count_double_bonds(mol):
-    """Count number of double bonds in molecule"""
-    count = 0
+def count_bond_types(mol):
+    """Count number of double and triple bonds in molecule"""
+    dbl = 0
+    trpl = 0
     for bond in mol.GetBonds():
         if bond.GetBondType() == BondType.DOUBLE:
-            count += 1
-    return count
+            dbl += 1
+        elif bond.GetBondType() == BondType.TRIPLE:
+            trpl += 1
+    return dbl, trpl
 
 def get_allowed_bond_orders(pair):
     """Filter bond orders based on configuration"""
     orders = bond_orders.get(pair, [1])  # Default to single bond if pair not defined
     filtered = []
     for order in orders:
-        if order == 1:  # Always allow single bonds
+        if order == 1:
+            filtered.append(order)  # Always allow single bonds
+        elif order == 2 and ALLOW_DOUBLE_BONDS and MAX_DOUBLE_BONDS > 0:
             filtered.append(order)
-        elif order == 2 and ALLOW_DOUBLE_BONDS:
-            filtered.append(order)
-        elif order == 3 and ALLOW_TRIPLE_BONDS:
+        elif order == 3 and ALLOW_TRIPLE_BONDS and MAX_TRIPLE_BONDS > 0:
             filtered.append(order)
     return filtered
 
@@ -151,8 +156,9 @@ def explore_bond_permutations(mol, target_formula, collected, seen, depth=0, max
         
     rw_mol = RWMol(mol)
     bonds = list(rw_mol.GetBonds())
+    current_dbl, current_trpl = count_bond_types(rw_mol)
     
-    for i, bond in enumerate(bonds):
+    for bond in bonds:
         a1 = bond.GetBeginAtom().GetSymbol()
         a2 = bond.GetEndAtom().GetSymbol()
         pair = tuple(sorted((a1, a2)))
@@ -166,8 +172,10 @@ def explore_bond_permutations(mol, target_formula, collected, seen, depth=0, max
         possible_orders = [o for o in get_allowed_bond_orders(pair) if o > current_order]
         
         for new_order in possible_orders:
-            # Skip if we'd exceed max double bonds
-            if new_order == 2 and count_double_bonds(rw_mol) >= MAX_DOUBLE_BONDS:
+            # Skip if we'd exceed max allowed bonds
+            if new_order == 2 and current_dbl >= MAX_DOUBLE_BONDS:
+                continue
+            if new_order == 3 and current_trpl >= MAX_TRIPLE_BONDS:
                 continue
                 
             # Create new molecule with modified bond
@@ -177,7 +185,6 @@ def explore_bond_permutations(mol, target_formula, collected, seen, depth=0, max
             
             try:
                 Chem.SanitizeMol(new_mol)
-                # Recursively process the new molecule
                 process_complete_molecule(new_mol, target_formula, collected, seen, depth+1)
             except:
                 continue
@@ -196,7 +203,7 @@ def process_complete_molecule(mol, target_formula, collected, seen, depth=0):
     collected.append(smiles)
     
     # Explore bond permutations if allowed
-    if (ALLOW_DOUBLE_BONDS or ALLOW_TRIPLE_BONDS) and depth < 3:
+    if (ALLOW_DOUBLE_BONDS and MAX_DOUBLE_BONDS > 0) or (ALLOW_TRIPLE_BONDS and MAX_TRIPLE_BONDS > 0):
         explore_bond_permutations(mol, target_formula, collected, seen, depth)
 
 def grow_recursive(current_mol, target_formula, collected, seen, depth=0):
