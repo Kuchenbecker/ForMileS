@@ -3,9 +3,8 @@
 ###                   ForMileS: Formation of Mass SMILES                      ###
 ###                                                                           ###
 #################################################################################
-# Esta versão do ForMileS começa a partir de um SMILES e utiliza lógica de      #
-# Branch and Bound para expandir a estrutura, respeitando valências e fórmula.  #
-# Inclui novos controles para linearidade e ciclicidade molecular.              #
+# This version explores bond order permutations while maintaining Branch & Bound #
+# principles for efficient structure generation with configurable constraints.   #
 #################################################################################
 
 import os
@@ -34,6 +33,9 @@ SAVE_XYZ = config["SAVE_XYZ"]
 SAVE_MOL = config["SAVE_MOL"]
 ALLOW_BRANCHING = config.get("ALLOW_BRANCHING", True)
 ALLOW_CYCLES = config.get("ALLOW_CYCLES", True)
+ALLOW_DOUBLE_BONDS = config.get("ALLOW_DOUBLE_BONDS", True)
+ALLOW_TRIPLE_BONDS = config.get("ALLOW_TRIPLE_BONDS", False)
+MAX_DOUBLE_BONDS = config.get("MAX_DOUBLE_BONDS", 2)
 OUTPUT_DIR = f"OutputFiles_{FORMULA}_Charge_{CHARGE}"
 
 IMG_SIZE = (300, 200)
@@ -48,7 +50,7 @@ bond_orders = {tuple(json.loads(k)): v for k, v in params["bond_orders"].items()
 max_valence = params["max_valence"]
 charge_elements = params["charge_elements"]
 
-######################### UTILS E PARSING #######################################
+######################### UTILITY FUNCTIONS ####################################
 def create_output_folder():
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     if SAVE_XYZ:
@@ -120,50 +122,121 @@ def has_cycles(mol):
     """Check if molecule contains any rings"""
     return Chem.GetSSSR(mol) > 0
 
+def count_double_bonds(mol):
+    """Count number of double bonds in molecule"""
+    count = 0
+    for bond in mol.GetBonds():
+        if bond.GetBondType() == BondType.DOUBLE:
+            count += 1
+    return count
+
+def get_allowed_bond_orders(pair):
+    """Filter bond orders based on configuration"""
+    orders = bond_orders.get(pair, [1])  # Default to single bond if pair not defined
+    filtered = []
+    for order in orders:
+        if order == 1:  # Always allow single bonds
+            filtered.append(order)
+        elif order == 2 and ALLOW_DOUBLE_BONDS:
+            filtered.append(order)
+        elif order == 3 and ALLOW_TRIPLE_BONDS:
+            filtered.append(order)
+    return filtered
+
 ####################### B&B EXPANSION ENGINE ####################################
-def grow_recursive(current_mol, target_formula, collected, seen):
+def explore_bond_permutations(mol, target_formula, collected, seen, depth=0, max_depth=3):
+    """Explore different bond order combinations for completed molecules"""
+    if depth >= max_depth:  # Prevent infinite recursion
+        return
+        
+    rw_mol = RWMol(mol)
+    bonds = list(rw_mol.GetBonds())
+    
+    for i, bond in enumerate(bonds):
+        a1 = bond.GetBeginAtom().GetSymbol()
+        a2 = bond.GetEndAtom().GetSymbol()
+        pair = tuple(sorted((a1, a2)))
+        current_order = bond.GetBondTypeAsDouble()
+        
+        # Skip if current bond order is already maximum
+        if current_order == 3:
+            continue
+            
+        # Get allowed higher bond orders for this pair
+        possible_orders = [o for o in get_allowed_bond_orders(pair) if o > current_order]
+        
+        for new_order in possible_orders:
+            # Skip if we'd exceed max double bonds
+            if new_order == 2 and count_double_bonds(rw_mol) >= MAX_DOUBLE_BONDS:
+                continue
+                
+            # Create new molecule with modified bond
+            new_mol = RWMol(rw_mol)
+            new_bond = new_mol.GetBondWithIdx(bond.GetIdx())
+            new_bond.SetBondType(BondType.values[new_order])
+            
+            try:
+                Chem.SanitizeMol(new_mol)
+                # Recursively process the new molecule
+                process_complete_molecule(new_mol, target_formula, collected, seen, depth+1)
+            except:
+                continue
+
+def process_complete_molecule(mol, target_formula, collected, seen, depth=0):
+    """Handle molecules that match the target formula"""
+    smiles = mol_to_canonical_smiles(mol)
+    if not smiles or smiles in seen:
+        return
+        
+    # Check structural constraints
+    if (not ALLOW_BRANCHING and not is_linear(mol)) or (not ALLOW_CYCLES and has_cycles(mol)):
+        return
+        
+    seen.add(smiles)
+    collected.append(smiles)
+    
+    # Explore bond permutations if allowed
+    if (ALLOW_DOUBLE_BONDS or ALLOW_TRIPLE_BONDS) and depth < 3:
+        explore_bond_permutations(mol, target_formula, collected, seen, depth)
+
+def grow_recursive(current_mol, target_formula, collected, seen, depth=0):
     current_atoms = count_atoms(current_mol)
     deficit = atom_deficit(target_formula, current_atoms)
 
+    # BOUNDING STEP 1: Prune if atom deficit is invalid
     if not is_deficit_valid(deficit):
         return
 
+    # BOUNDING STEP 2: Check if molecule is complete
     if sum(deficit.values()) == 0:
-
-        if (not ALLOW_BRANCHING and not is_linear(current_mol)):
-            return
-        if (not ALLOW_CYCLES and has_cycles(current_mol)):
-            return
-            
-        smiles = mol_to_canonical_smiles(current_mol)
-        if smiles and smiles not in seen:
-            seen.add(smiles)
-            collected.append(smiles)
+        process_complete_molecule(current_mol, target_formula, collected, seen, depth)
         return
 
+    # BOUNDING STEP 3: Prune if valence rules are violated
     if not valence_ok(current_mol):
         return
-    if (not ALLOW_BRANCHING and not is_linear(current_mol)):
-        return
-    if (not ALLOW_CYCLES and has_cycles(current_mol)):
+
+    # BOUNDING STEP 4: Prune based on structural constraints
+    if (not ALLOW_BRANCHING and not is_linear(current_mol)) or (not ALLOW_CYCLES and has_cycles(current_mol)):
         return
 
+    # BRANCHING: Explore all possible atom additions
     for atom_symbol in deficit:
         if deficit[atom_symbol] == 0:
             continue
         for idx in open_sites(current_mol):
             symbol1 = current_mol.GetAtomWithIdx(idx).GetSymbol()
             pair = tuple(sorted((symbol1, atom_symbol)))
-            for order in bond_orders.get(pair, []):
+            for order in get_allowed_bond_orders(pair):
                 try:
                     new_mol = attach_atom(current_mol, atom_symbol, idx, order)
-                    grow_recursive(new_mol, target_formula, collected, seen)
+                    grow_recursive(new_mol, target_formula, collected, seen, depth+1)
                 except:
                     continue
 
-####################### MOL GRAPH GENERATION #######################################
+####################### MOL GRAPH GENERATION ####################################
 def run_generation():
-    print("[INFO] Initiating molecular graph expansion from basic scaffold")
+    print("[INFO] Initiating molecular graph expansion from scaffolds...")
     target = parse_formula(FORMULA)
     
     if isinstance(MOL_SCAFFOLD, str):
@@ -174,11 +247,11 @@ def run_generation():
     collected = []
     seen = set()
     
-    for smarts in precursor_list:
-        print(f"[PROCESSING] Building from SMARTS: {smarts}")
-        base_mol = Chem.MolFromSmarts(smarts)
+    for smi in precursor_list:
+        print(f"[PROCESSING] Building from scaffold: {smi}")
+        base_mol = Chem.MolFromSmiles(smi)
         if not base_mol:
-            print(f"[WARNING] Invalid SMARTS: {smarts}")
+            print(f"[WARNING] Invalid SMILES: {smi}")
             continue
             
         try:
@@ -186,23 +259,16 @@ def run_generation():
             base_mol = rw_base.GetMol()
             grow_recursive(base_mol, target, collected, seen)
         except Exception as e:
-            print(f"[ERROR] Processing SMARTS {smarts}: {str(e)}")
+            print(f"[ERROR] Processing scaffold {smi}: {str(e)}")
             continue
-
-    unique_smiles = []
-    seen_smiles = set()
-    for smi in collected:
-        if smi not in seen_smiles:
-            seen_smiles.add(smi)
-            unique_smiles.append(smi)
 
     output_path = os.path.join(OUTPUT_DIR, f"nSMILES_{FORMULA}.txt")
     with open(output_path, "w") as f:
-        for s in sorted(unique_smiles):
+        for s in sorted(collected):
             f.write(s + "\n")
     
-    print(f"[OK] Saved {len(unique_smiles)} unique SMILES in {output_path}")
-    return unique_smiles
+    print(f"[OK] Saved {len(collected)} unique SMILES in {output_path}")
+    return collected
 
 ####################### CHARGE AND MASS FILTERING ####################################
 def generate_charged_smiles(smiles_list):

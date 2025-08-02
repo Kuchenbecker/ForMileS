@@ -1,10 +1,13 @@
 {
   "FORMULA": "C6O2",
-  "PRECURSOR_SMARTS": "CCCOCCCO",
+  "MOL_SCAFFOLD": ["CCCOCCCO","C=CCOCCCO"],
   "CHARGE": 1,
   "TARGET_MASS": 117.092,
   "TOLERANCE": 0.5,
   "PARAM_FILE": "parameters.json",
-  "SAVE_XYZ": true,
-  "SAVE_MOL": true
+  "SAVE_XYZ": false,
+  "SAVE_MOL": false,
+  "SAVE_SVG": false,
+  "ALLOW_BRANCHING": false,
+  "ALLOW_CYCLIC": false
 }

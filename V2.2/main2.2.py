@@ -1,12 +1,3 @@
-#################################################################################
-###                                                                           ###
-###        ForMileS-SMART: Geração Estrutural com Expansão B&B via SMARTS     ###
-###                                                                           ###
-#################################################################################
-# Esta versão do ForMileS começa a partir de um SMARTS e utiliza lógica de    #
-# Branch and Bound para expandir a estrutura, respeitando valências e fórmula.#
-#################################################################################
-
 import os
 import re
 import json
@@ -19,25 +10,26 @@ from rdkit.Chem import AllChem
 from PIL import Image, ImageDraw, ImageFont
 from tqdm import tqdm
 
-############################## LOAD CONFIG ######################################
+# Load configuration
 with open("config.json") as f:
     config = json.load(f)
 
 FORMULA = config["FORMULA"]
-PRECURSOR_SMARTS = config["PRECURSOR_SMARTS"]
+INPUT_SMILES_LIST = config["INPUT_SMILES_LIST"]
 CHARGE = config["CHARGE"]
 TARGET_MASS = config["TARGET_MASS"]
 TOLERANCE = config["TOLERANCE"]
 PARAM_FILE = config["PARAM_FILE"]
 SAVE_XYZ = config["SAVE_XYZ"]
 SAVE_MOL = config["SAVE_MOL"]
+SAVE_SVG = config.get("SAVE_SVG", False)
 OUTPUT_DIR = f"OutputFiles_{FORMULA}_Charge_{CHARGE}"
 
 IMG_SIZE = (300, 200)
 ANNOTATION_HEIGHT = 60
 FONT_SIZE = 14
 
-############## LOAD BOND AND VALENCE RULES FROM FILE ###########################
+# Load bond rules
 with open(PARAM_FILE, "r") as f:
     params = json.load(f)
 
@@ -45,7 +37,7 @@ bond_orders = {tuple(json.loads(k)): v for k, v in params["bond_orders"].items()
 max_valence = params["max_valence"]
 charge_elements = params["charge_elements"]
 
-######################### UTILS E PARSING #######################################
+# Utilities
 def create_output_folder():
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     if SAVE_XYZ:
@@ -106,7 +98,7 @@ def mol_to_canonical_smiles(mol):
     except:
         return None
 
-####################### B&B EXPANSION ENGINE ####################################
+# B&B engine
 def grow_recursive(current_mol, target_formula, collected, seen):
     current_atoms = count_atoms(current_mol)
     deficit = atom_deficit(target_formula, current_atoms)
@@ -137,30 +129,38 @@ def grow_recursive(current_mol, target_formula, collected, seen):
                 except:
                     continue
 
-####################### GERAÇÃO PRINCIPAL #######################################
+# Run generation from multiple SMILES
 def run_generation():
-    print("[INFO] Iniciando expansão a partir de SMARTS...")
+    print("[INFO] Starting structure expansion from multiple SMILES...")
     target = parse_formula(FORMULA)
-    base_mol = Chem.MolFromSmarts(PRECURSOR_SMARTS)
-    rw_base = RWMol(base_mol)
-    base_mol = rw_base.GetMol()
+    smiles_list = INPUT_SMILES_LIST
 
-    collected = []
-    seen = set()
-    grow_recursive(base_mol, target, collected, seen)
+    all_collected = set()
+
+    for smi in tqdm(smiles_list, desc="[GEN] Processing input SMILES"):
+        base_mol = Chem.MolFromSmiles(smi)
+        if base_mol is None:
+            print(f"[WARN] Invalid SMILES: {smi}")
+            continue
+
+        rw_base = RWMol(base_mol)
+        collected = []
+        seen = set()
+        grow_recursive(rw_base.GetMol(), target, collected, seen)
+        all_collected.update(collected)
 
     output_path = os.path.join(OUTPUT_DIR, f"nSMILES_{FORMULA}.txt")
     with open(output_path, "w") as f:
-        for s in sorted(collected):
+        for s in sorted(all_collected):
             f.write(s + "\n")
-    print(f"[OK] Salvo {len(collected)} SMILES em {output_path}")
-    return collected
+    print(f"[OK] Generated {len(all_collected)} unique structures.")
+    return list(all_collected)
 
-####################### CARGA E FILTRO MASSA ####################################
+# Charge and mass filtering
 def generate_charged_smiles(smiles_list):
     charged = []
-    for smi in tqdm(smiles_list, desc="[CHARGE] Adicionando carga"):
-        mol = Chem.MolFromSmiles(smi, sanitize=False)  # Não sanitiza agora
+    for smi in tqdm(smiles_list, desc="[CHARGE] Adding charges"):
+        mol = Chem.MolFromSmiles(smi, sanitize=False)
         if not mol:
             continue
         for atom in mol.GetAtoms():
@@ -169,8 +169,6 @@ def generate_charged_smiles(smiles_list):
                 atom_idx = atom.GetIdx()
                 atom_copy = mol_copy.GetAtomWithIdx(atom_idx)
                 atom_copy.SetFormalCharge(CHARGE)
-
-                # Tenta sanitizar a cópia (obrigatório para SMILES válidos com carga)
                 try:
                     Chem.SanitizeMol(mol_copy)
                     charged_smi = Chem.MolToSmiles(mol_copy, canonical=True)
@@ -198,7 +196,7 @@ def filter_by_mass(smiles_list):
             f.write(c + "\n")
     return filtered
 
-######################### VISUALIZAÇÃO ##########################################
+# Save molecule images
 def smiles_to_images(smiles_list):
     for idx, smiles in enumerate(smiles_list):
         mol = Chem.MolFromSmiles(smiles)
@@ -206,23 +204,35 @@ def smiles_to_images(smiles_list):
 
         formula = CalcMolFormula(mol)
         mass = f"{Descriptors.ExactMolWt(mol):.4f}"
-        img = Draw.MolToImage(mol, size=IMG_SIZE)
 
-        total_height = IMG_SIZE[1] + ANNOTATION_HEIGHT
-        canvas = Image.new("RGB", (IMG_SIZE[0], total_height), "white")
-        canvas.paste(img, (0, 0))
+        if SAVE_SVG:
+            try:
+                drawer = Draw.MolDraw2DSVG(IMG_SIZE[0], IMG_SIZE[1])
+                drawer.DrawMolecule(mol)
+                drawer.FinishDrawing()
+                svg = drawer.GetDrawingText()
+                fname = f"mol_{idx + 1}.svg"
+                with open(os.path.join(OUTPUT_DIR, fname), "w", encoding="utf-8") as f:
+                    f.write(svg)
+            except Exception as e:
+                print(f"[WARN] Failed to generate SVG for molecule {idx+1}: {e}")
+        else:
+            img = Draw.MolToImage(mol, size=IMG_SIZE)
+            total_height = IMG_SIZE[1] + ANNOTATION_HEIGHT
+            canvas = Image.new("RGB", (IMG_SIZE[0], total_height), "white")
+            canvas.paste(img, (0, 0))
 
-        draw = ImageDraw.Draw(canvas)
-        try:
-            font = ImageFont.truetype("arial.ttf", FONT_SIZE)
-        except:
-            font = ImageFont.load_default()
+            draw = ImageDraw.Draw(canvas)
+            try:
+                font = ImageFont.truetype("arial.ttf", FONT_SIZE)
+            except:
+                font = ImageFont.load_default()
 
-        draw.text((10, IMG_SIZE[1] + 5), f"{formula} | {mass}", fill="black", font=font)
-        draw.text((10, IMG_SIZE[1] + 25), smiles, fill="black", font=font)
+            draw.text((10, IMG_SIZE[1] + 5), f"{formula} | {mass}", fill="black", font=font)
+            draw.text((10, IMG_SIZE[1] + 25), smiles, fill="black", font=font)
 
-        fname = f"mol_{idx + 1}.png"
-        canvas.save(os.path.join(OUTPUT_DIR, fname))
+            fname = f"mol_{idx + 1}.png"
+            canvas.save(os.path.join(OUTPUT_DIR, fname))
 
         if SAVE_XYZ:
             xyz_path = os.path.join(OUTPUT_DIR, "Coordinate_Files", f"mol_{idx + 1}.xyz")
@@ -241,12 +251,12 @@ def smiles_to_images(smiles_list):
             except:
                 pass
 
-########################### EXECUÇÃO GERAL ######################################
+# Main execution
 if __name__ == "__main__":
-    print("================== ForMileS-SMART v1.0 ==================")
+    print("================== ForMileS-SMART v2.2 ==================")
     create_output_folder()
     base_smiles = run_generation()
     charged = generate_charged_smiles(base_smiles)
     final = filter_by_mass(charged)
     smiles_to_images(final)
-    print("=================== EXECUÇÃO COMPLETA ===================")
+    print("===================== EXECUTION DONE ====================")
