@@ -1,0 +1,19 @@
+{
+  "FORMULA": "C7Cl",
+  "MOL_SCAFFOLD": ["C1C=CC=CC=1"],
+  "CHARGE": -1,
+  "TARGET_MASS": 125.016,
+  "TOLERANCE": 0.5,
+
+  "PARAM_FILE": "parameters.json",
+  "SAVE_XYZ": true,
+  "SAVE_MOL": true,
+  "SAVE_SVG": true,
+
+  "ALLOW_BRANCHING": true,
+  "ALLOW_CYCLES": true,
+  "ALLOW_DOUBLE_BONDS": true,
+  "ALLOW_TRIPLE_BONDS": false,
+  "MAX_DOUBLE_BONDS": 3,
+  "MAX_TRIPLE_BONDS": 2
+}
