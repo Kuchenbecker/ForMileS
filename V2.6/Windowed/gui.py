@@ -60,7 +60,7 @@ def open_output_folder():
         subprocess.Popen(["xdg-open", folder])
 
 root = tk.Tk()
-root.title("ForMileS GUI")
+root.title("ForMileS V2.6")
 root.geometry("400x630")
 
 tk.Label(root, text="Molecular Formula:").pack()
