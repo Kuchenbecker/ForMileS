@@ -9,7 +9,7 @@
   "PARAM_FILE": "parameters.json",
   "SAVE_XYZ": true,
   "SAVE_MOL": true,
-  "SAVE_SVG": false,
+  "SAVE_SVG": true,
   "ALLOW_BRANCHING": false,
   "ALLOW_CYCLES": false,
   "ALLOW_DOUBLE_BONDS": true,
