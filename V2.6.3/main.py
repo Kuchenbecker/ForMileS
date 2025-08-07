@@ -45,7 +45,7 @@ ALLOW_DOUBLE_BONDS = config.get("ALLOW_DOUBLE_BONDS", True)
 ALLOW_TRIPLE_BONDS = config.get("ALLOW_TRIPLE_BONDS", False)
 MAX_DOUBLE_BONDS = config.get("MAX_DOUBLE_BONDS", 2)
 MAX_TRIPLE_BONDS = config.get("MAX_TRIPLE_BONDS", 0)  # Default to no triple bonds
-OUTPUT_DIR = f"OutputFiles_{FORMULA}_Charge_{CHARGE}"
+OUTPUT_DIR = config.get("OUTPUT_DIR", f"OutputFiles_{FORMULA}_Charge_{CHARGE}")
 
 IMG_SIZE = (300, 200)
 ANNOTATION_HEIGHT = 60

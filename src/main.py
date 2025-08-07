@@ -15,9 +15,20 @@ from rdkit.Chem.rdchem import BondType
 from rdkit.Chem import AllChem
 from PIL import Image, ImageDraw, ImageFont
 from tqdm import tqdm
+import sys
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 ############################## LOAD CONFIG ######################################
-with open("config.json") as f:
+with open(resource_path("config.json")) as f:
     config = json.load(f)
 
 FORMULA = config["FORMULA"]
@@ -34,14 +45,14 @@ ALLOW_DOUBLE_BONDS = config.get("ALLOW_DOUBLE_BONDS", True)
 ALLOW_TRIPLE_BONDS = config.get("ALLOW_TRIPLE_BONDS", False)
 MAX_DOUBLE_BONDS = config.get("MAX_DOUBLE_BONDS", 2)
 MAX_TRIPLE_BONDS = config.get("MAX_TRIPLE_BONDS", 0)  # Default to no triple bonds
-OUTPUT_DIR = f"OutputFiles_{FORMULA}_Charge_{CHARGE}"
+OUTPUT_DIR = config.get("OUTPUT_DIR", f"OutputFiles_{FORMULA}_Charge_{CHARGE}")
 
 IMG_SIZE = (300, 200)
 ANNOTATION_HEIGHT = 60
 FONT_SIZE = 14
 
 ############## LOAD BOND AND VALENCE RULES FROM FILE ###########################
-with open(PARAM_FILE, "r") as f:
+with open(resource_path(config["PARAM_FILE"]), "r") as f:  # Modified line
     params = json.load(f)
 
 bond_orders = {tuple(json.loads(k)): v for k, v in params["bond_orders"].items()}
@@ -319,6 +330,56 @@ def filter_by_mass(smiles_list):
     return filtered
 
 ######################### OUTPUT REPORTING ##########################################
+def generate_xyz_from_smiles(smiles):
+    """Generate optimized XYZ coordinates from SMILES string"""
+    try:
+        mol = Chem.MolFromSmiles(smiles)
+        if mol is None:
+            print(f"[WARNING] Could not parse SMILES: {smiles}")
+            return None
+            
+        # Add hydrogens while preserving charges
+        mol_with_h = Chem.AddHs(mol)
+        
+        # Generate 3D coordinates
+        if AllChem.EmbedMolecule(mol_with_h) != 0:
+            print(f"[WARNING] 3D embedding failed for: {smiles}")
+            return None
+            
+        # Optimize geometry (UFF is faster than MMFF for large molecules)
+        if AllChem.UFFOptimizeMolecule(mol_with_h) != 0:
+            print(f"[WARNING] Optimization failed for: {smiles}")
+            return None
+            
+        return Chem.MolToXYZBlock(mol_with_h)
+    except Exception as e:
+        print(f"[ERROR] XYZ generation failed for {smiles}: {str(e)}")
+        return None
+
+def generate_mol_from_smiles(smiles):
+    """Generate MOL file content from SMILES string"""
+    try:
+        mol = Chem.MolFromSmiles(smiles)
+        if mol is None:
+            print(f"[WARNING] Could not parse SMILES: {smiles}")
+            return None
+
+        mol_with_h = Chem.AddHs(mol)
+
+        if AllChem.EmbedMolecule(mol_with_h) != 0:
+            print(f"[WARNING] 3D embedding failed for: {smiles}")
+            return None
+            
+        # Optimize geometry
+        if AllChem.UFFOptimizeMolecule(mol_with_h) != 0:
+            print(f"[WARNING] Optimization failed for: {smiles}")
+            return None
+            
+        return Chem.MolToMolBlock(mol_with_h)       
+    except Exception as e:
+        print(f"[ERROR] MOL generation failed for {smiles}: {str(e)}")
+        return None
+
 def smiles_to_images(smiles_list):
     # Create SVG folder if needed
     if config.get("SAVE_SVG", False):
@@ -376,24 +437,27 @@ def smiles_to_images(smiles_list):
             except Exception as e:
                 print(f"[WARNING] Failed to generate SVG for {smiles}: {str(e)}")
                 continue
-
+ 
         # Handle XYZ and MOL files
         if SAVE_XYZ:
             xyz_path = os.path.join(OUTPUT_DIR, "Coordinate_Files", f"mol_{idx + 1}.xyz")
             try:
-                AllChem.EmbedMolecule(mol)
-                with open(xyz_path, "w") as f:
-                    f.write(Chem.MolToXYZBlock(mol))
-            except:
-                pass
+                xyz_block = generate_xyz_from_smiles(smiles)
+                if xyz_block:
+                    with open(xyz_path, "w") as f:
+                        f.write(xyz_block)
+            except Exception as e:
+                print(f"[WARNING] Failed to generate XYZ for {smiles}: {str(e)}")
 
         if SAVE_MOL:
             mol_path = os.path.join(OUTPUT_DIR, "Mol_Files", f"mol_{idx + 1}.mol")
             try:
-                with open(mol_path, "w") as f:
-                    f.write(Chem.MolToMolBlock(mol))
-            except:
-                pass
+                mol_block = generate_mol_from_smiles(smiles)
+                if mol_block:
+                    with open(mol_path, "w") as f:
+                        f.write(mol_block)
+            except Exception as e:
+                print(f"[WARNING] Failed to generate MOL for {smiles}: {str(e)}")
 
 ########################### MAIN EXECUTION ######################################
 if __name__ == "__main__":

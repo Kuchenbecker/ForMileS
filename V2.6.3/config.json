@@ -1,7 +1,7 @@
 {
   "FORMULA": "C6O2",
   "MOL_SCAFFOLD": [
-    "CCCOC"
+    "CCCOCCO"
   ],
   "CHARGE": 1,
   "TARGET_MASS": 117.092,
@@ -9,11 +9,12 @@
   "PARAM_FILE": "C:\\Users\\vkuchenbecker\\OneDrive - Chemyunion Ltda\\Documentos\\GitClone\\ForMileS\\V2.6.3\\parameters.json",
   "SAVE_XYZ": false,
   "SAVE_MOL": false,
-  "SAVE_SVG": false,
+  "SAVE_SVG": true,
   "ALLOW_BRANCHING": false,
   "ALLOW_CYCLES": false,
-  "ALLOW_DOUBLE_BONDS": true,
+  "ALLOW_DOUBLE_BONDS": false,
   "ALLOW_TRIPLE_BONDS": false,
   "MAX_DOUBLE_BONDS": 1,
-  "MAX_TRIPLE_BONDS": 1
+  "MAX_TRIPLE_BONDS": 1,
+  "OUTPUT_DIR": "C:/Users/vkuchenbecker/OneDrive - Chemyunion Ltda/Documentos"
 }
