@@ -1,10 +1,8 @@
 #################################################################################
 ###                                                                           ###
-###                   ForMileS: Formation of Mass SMILES 2.6.1                ###
+###                   ForMileS: Formation of Mass SMILES                      ###
 ###                                                                           ###
 #################################################################################
-# In this version, hydrogen generation in .xyz and .mol files was fixed with function based on
-# TQMSS ORIGEN.py. Still part of v2.6 because GUI was kept but under development.
 
 import os
 import re
@@ -452,7 +450,7 @@ def smiles_to_images(smiles_list):
 
 ########################### MAIN EXECUTION ######################################
 if __name__ == "__main__":
-    print("================== ForMileS v2.6.1 ==================")
+    print("================== ForMileS v2.5 ==================")
     print(f"Structural Setup: Molecular Branching={ALLOW_BRANCHING}, Cyclic={ALLOW_CYCLES}")
     create_output_folder()
     base_smiles = run_generation()
