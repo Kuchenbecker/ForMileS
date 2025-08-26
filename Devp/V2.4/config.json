@@ -1,0 +1,19 @@
+{
+  "FORMULA": "C6O2",
+  "MOL_SCAFFOLD": ["CCCOCCCO"],
+  "CHARGE": 1,
+  "TARGET_MASS": 117.092,
+  "TOLERANCE": 0.5,
+
+  "PARAM_FILE": "parameters.json",
+  "SAVE_XYZ": true,
+  "SAVE_MOL": true,
+  "SAVE_SVG": true,
+
+  "ALLOW_BRANCHING": false,
+  "ALLOW_CYCLIC": false,
+  "ALLOW_DOUBLE_BONDS": true,
+  "ALLOW_TRIPLE_BONDS": true,
+  "MAX_DOUBLE_BONDS": 2,
+  "MAX_TRIPLE_BONDS": 2
+}

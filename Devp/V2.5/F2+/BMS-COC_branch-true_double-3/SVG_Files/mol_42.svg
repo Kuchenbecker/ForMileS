@@ -1,0 +1,102 @@
+<?xml version='1.0' encoding='iso-8859-1'?>
+<svg version='1.1' baseProfile='full'
+              xmlns='http://www.w3.org/2000/svg'
+                      xmlns:rdkit='http://www.rdkit.org/xml'
+                      xmlns:xlink='http://www.w3.org/1999/xlink'
+                  xml:space='preserve'
+width='300px' height='200px' viewBox='0 0 300 200'>
+<!-- END OF HEADER -->
+<rect style='opacity:1.0;fill:#FFFFFF;stroke:none' width='300.0' height='200.0' x='0.0' y='0.0'> </rect>
+<path class='bond-0 atom-0 atom-1' d='M 254.2,43.2 L 221.5,99.9' style='fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2.0px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1' />
+<path class='bond-1 atom-1 atom-2' d='M 221.5,99.9 L 138.9,99.9' style='fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2.0px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1' />
+<path class='bond-2 atom-2 atom-3' d='M 138.9,99.9 L 122.5,128.4' style='fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2.0px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1' />
+<path class='bond-2 atom-2 atom-3' d='M 122.5,128.4 L 106.0,156.9' style='fill:none;fill-rule:evenodd;stroke:#FF0000;stroke-width:2.0px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1' />
+<path class='bond-3 atom-2 atom-4' d='M 138.9,99.9 L 122.6,71.6' style='fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2.0px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1' />
+<path class='bond-3 atom-2 atom-4' d='M 122.6,71.6 L 106.2,43.3' style='fill:none;fill-rule:evenodd;stroke:#FF0000;stroke-width:2.0px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1' />
+<path class='bond-4 atom-4 atom-5' d='M 84.1,28.4 L 49.6,28.4' style='fill:none;fill-rule:evenodd;stroke:#FF0000;stroke-width:2.0px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1' />
+<path class='bond-4 atom-4 atom-5' d='M 49.6,28.4 L 15.0,28.4' style='fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2.0px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1' />
+<path d='M 223.1,97.1 L 221.5,99.9 L 217.4,99.9' style='fill:none;stroke:#000000;stroke-width:2.0px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;' />
+<path class='atom-0' d='M 253.8 28.5
+Q 253.8 22.6, 256.5 19.6
+Q 259.2 16.5, 264.4 16.5
+Q 269.2 16.5, 271.8 19.9
+L 269.6 21.7
+Q 267.8 19.2, 264.4 19.2
+Q 260.9 19.2, 259.0 21.6
+Q 257.2 24.0, 257.2 28.5
+Q 257.2 33.1, 259.1 35.5
+Q 261.0 37.8, 264.8 37.8
+Q 267.4 37.8, 270.4 36.3
+L 271.3 38.8
+Q 270.1 39.6, 268.2 40.0
+Q 266.4 40.5, 264.3 40.5
+Q 259.2 40.5, 256.5 37.4
+Q 253.8 34.3, 253.8 28.5
+' fill='#000000'/>
+<path class='atom-0' d='M 274.8 20.7
+L 278.9 20.7
+L 278.9 16.4
+L 280.8 16.4
+L 280.8 20.7
+L 285.0 20.7
+L 285.0 22.3
+L 280.8 22.3
+L 280.8 26.7
+L 278.9 26.7
+L 278.9 22.3
+L 274.8 22.3
+L 274.8 20.7
+' fill='#000000'/>
+<path class='atom-3' d='M 63.8 159.9
+L 66.9 159.9
+L 66.9 169.8
+L 78.9 169.8
+L 78.9 159.9
+L 82.1 159.9
+L 82.1 183.3
+L 78.9 183.3
+L 78.9 172.4
+L 66.9 172.4
+L 66.9 183.3
+L 63.8 183.3
+L 63.8 159.9
+' fill='#FF0000'/>
+<path class='atom-3' d='M 86.9 171.5
+Q 86.9 165.9, 89.6 162.7
+Q 92.4 159.6, 97.6 159.6
+Q 102.8 159.6, 105.6 162.7
+Q 108.3 165.9, 108.3 171.5
+Q 108.3 177.2, 105.5 180.4
+Q 102.7 183.6, 97.6 183.6
+Q 92.4 183.6, 89.6 180.4
+Q 86.9 177.2, 86.9 171.5
+M 97.6 181.0
+Q 101.2 181.0, 103.1 178.6
+Q 105.0 176.2, 105.0 171.5
+Q 105.0 166.9, 103.1 164.6
+Q 101.2 162.2, 97.6 162.2
+Q 94.0 162.2, 92.1 164.5
+Q 90.2 166.9, 90.2 171.5
+Q 90.2 176.2, 92.1 178.6
+Q 94.0 181.0, 97.6 181.0
+' fill='#FF0000'/>
+<path class='atom-4' d='M 86.9 28.4
+Q 86.9 22.8, 89.6 19.7
+Q 92.4 16.5, 97.6 16.5
+Q 102.8 16.5, 105.6 19.7
+Q 108.3 22.8, 108.3 28.4
+Q 108.3 34.1, 105.5 37.3
+Q 102.7 40.5, 97.6 40.5
+Q 92.4 40.5, 89.6 37.3
+Q 86.9 34.1, 86.9 28.4
+M 97.6 37.9
+Q 101.2 37.9, 103.1 35.5
+Q 105.0 33.1, 105.0 28.4
+Q 105.0 23.8, 103.1 21.5
+Q 101.2 19.2, 97.6 19.2
+Q 94.0 19.2, 92.1 21.5
+Q 90.2 23.8, 90.2 28.4
+Q 90.2 33.1, 92.1 35.5
+Q 94.0 37.9, 97.6 37.9
+' fill='#FF0000'/>
+</svg>
