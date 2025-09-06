@@ -16,6 +16,22 @@ from rdkit.Chem import AllChem
 from PIL import Image, ImageDraw, ImageFont
 from tqdm import tqdm
 import sys
+import time
+
+# --- Minimal RAM helper (prefers psutil; falls back to Unix resource) ---
+def _get_ram_mb():
+    try:
+        import psutil
+        return psutil.Process().memory_info().rss / (1024 * 1024)  # current RSS
+    except Exception:
+        try:
+            import resource, platform
+            r = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+            # macOS returns bytes; Linux returns kilobytes
+            return (r / (1024 * 1024)) if platform.system() == "Darwin" else (r / 1024.0)
+        except Exception:
+            return None
+
 
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
@@ -461,6 +477,8 @@ def smiles_to_images(smiles_list):
 
 ########################### MAIN EXECUTION ######################################
 if __name__ == "__main__":
+    t0 = time.perf_counter()
+    
     print("================== ForMileS v2.5 ==================")
     print(f"Structural Setup: Molecular Branching={ALLOW_BRANCHING}, Cyclic={ALLOW_CYCLES}")
     create_output_folder()
@@ -469,3 +487,11 @@ if __name__ == "__main__":
     final = filter_by_mass(charged)
     smiles_to_images(final)
     print("=================== FINISHED ;) ===================")
+
+    # NEW: end timer + RAM
+    elapsed = time.perf_counter() - t0
+    ram_mb = _get_ram_mb()
+    if ram_mb is not None:
+        print(f"[SUMMARY] Elapsed={elapsed:.2f}s | RAM={ram_mb:.1f} MB (RSS)")
+    else:
+        print(f"[SUMMARY] Elapsed={elapsed:.2f}s | RAM=unavailable (install 'psutil' to enable)")

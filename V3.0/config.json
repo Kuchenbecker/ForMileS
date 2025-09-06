@@ -1,12 +1,12 @@
 {
-  "FORMULA": "C6O2H13",
+  "FORMULA": "C9O3",
   "MOL_SCAFFOLD": [
     "CCCOC"
   ],
   "CHARGE": 1,
-  "TARGET_MASS": 117.092,
+  "TARGET_MASS": 175.133,
   "TOLERANCE": 0.5,
-  "PARAM_FILE": "/home/vkuchenbecker/3.Codes/GitHub/ForMileS/src/parameters.json",
+  "PARAM_FILE": "/home/vkuchenbecker/3.Codes/GitHub/ForMileS/Benchmarking/parameters.json",
   "SAVE_XYZ": false,
   "SAVE_MOL": false,
   "SAVE_SVG": false,
@@ -16,5 +16,5 @@
   "ALLOW_TRIPLE_BONDS": true,
   "MAX_DOUBLE_BONDS": 1,
   "MAX_TRIPLE_BONDS": 1,
-  "OUTPUT_DIR": "/home/vkuchenbecker/3.Codes/GitHub/ForMileS/src/teste2"
+  "OUTPUT_DIR": "/home/vkuchenbecker/3.Codes/GitHub/ForMileS/Benchmarking/teste2"
 }
