@@ -16,6 +16,22 @@ from rdkit.Chem import AllChem
 from PIL import Image, ImageDraw, ImageFont
 from tqdm import tqdm
 import sys
+import time
+
+# --- Minimal RAM helper (prefers psutil; falls back to Unix resource) ---
+def _get_ram_mb():
+    try:
+        import psutil
+        return psutil.Process().memory_info().rss / (1024 * 1024)  # current RSS
+    except Exception:
+        try:
+            import resource, platform
+            r = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+            # macOS returns bytes; Linux returns kilobytes
+            return (r / (1024 * 1024)) if platform.system() == "Darwin" else (r / 1024.0)
+        except Exception:
+            return None
+
 
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
@@ -155,6 +171,70 @@ def get_allowed_bond_orders(pair):
             filtered.append(order)
     return filtered
 
+# ---------------------------- RING CLOSURE (NEW) ------------------------------
+def _current_valence(atom):
+    """Sum of bond orders around atom."""
+    return sum(b.GetBondTypeAsDouble() for b in atom.GetBonds())
+
+def _has_bond(mol, i, j):
+    return mol.GetBondBetweenAtoms(i, j) is not None
+
+def try_ring_closures(mol, target_formula, collected, seen, depth=0, max_new=10):
+    """
+    Attempt to create rings by adding a bond between two existing atoms that still
+    have valence capacity. Only runs when ALLOW_CYCLES is True.
+
+    - Keeps atom counts (formula) unchanged.
+    - Respects max_valence and bond_orders (requires at least single bond allowed).
+    - Dedup via process_complete_molecule() using canonical SMILES.
+    - Bounded by max_new to avoid blow-up.
+    """
+    if not ALLOW_CYCLES:
+        return
+
+    new_count = 0
+    rw = RWMol(mol)
+    n = rw.GetNumAtoms()
+
+    for i in range(n):
+        ai = rw.GetAtomWithIdx(i)
+        si = ai.GetSymbol()
+        if _current_valence(ai) >= max_valence.get(si, 4):
+            continue
+
+        for j in range(i + 1, n):
+            aj = rw.GetAtomWithIdx(j)
+            sj = aj.GetSymbol()
+
+            if _has_bond(rw, i, j):
+                continue
+
+            if _current_valence(aj) >= max_valence.get(sj, 4):
+                continue
+
+            pair = tuple(sorted((si, sj)))
+            possible_orders = bond_orders.get(pair, [1])
+            if 1 not in possible_orders:
+                continue
+
+            new_mol = RWMol(rw)
+            new_mol.AddBond(i, j, BondType.SINGLE)
+
+            try:
+                Chem.SanitizeMol(new_mol)
+            except Exception:
+                continue
+
+            if new_mol.GetRingInfo().NumRings() == 0:
+                continue
+
+            # Process as a completed molecule (handles seen/dedup + permutations)
+            process_complete_molecule(new_mol, target_formula, collected, seen, depth + 1)
+
+            new_count += 1
+            if new_count >= max_new:
+                return  # limit the number of closures per parent
+
 ####################### B&B EXPANSION ENGINE ####################################
 def explore_bond_permutations(mol, target_formula, collected, seen, depth=0, max_depth=3):
     """Explore different bond order combinations for completed molecules"""
@@ -208,7 +288,11 @@ def process_complete_molecule(mol, target_formula, collected, seen, depth=0):
         
     seen.add(smiles)
     collected.append(smiles)
-    
+
+    # NEW: if cycles are allowed, attempt ring closures from this parent
+    if ALLOW_CYCLES:
+        try_ring_closures(mol, target_formula, collected, seen, depth)
+
     # Explore bond permutations if allowed
     if (ALLOW_DOUBLE_BONDS and MAX_DOUBLE_BONDS > 0) or (ALLOW_TRIPLE_BONDS and MAX_TRIPLE_BONDS > 0):
         explore_bond_permutations(mol, target_formula, collected, seen, depth)
@@ -461,6 +545,8 @@ def smiles_to_images(smiles_list):
 
 ########################### MAIN EXECUTION ######################################
 if __name__ == "__main__":
+    t0 = time.perf_counter()
+    
     print("================== ForMileS v2.5 ==================")
     print(f"Structural Setup: Molecular Branching={ALLOW_BRANCHING}, Cyclic={ALLOW_CYCLES}")
     create_output_folder()
@@ -469,3 +555,11 @@ if __name__ == "__main__":
     final = filter_by_mass(charged)
     smiles_to_images(final)
     print("=================== FINISHED ;) ===================")
+
+    # NEW: end timer + RAM
+    elapsed = time.perf_counter() - t0
+    ram_mb = _get_ram_mb()
+    if ram_mb is not None:
+        print(f"[SUMMARY] Elapsed={elapsed:.2f}s | RAM={ram_mb:.1f} MB (RSS)")
+    else:
+        print(f"[SUMMARY] Elapsed={elapsed:.2f}s | RAM=unavailable (install 'psutil' to enable)")
