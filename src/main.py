@@ -374,44 +374,75 @@ def run_generation():
 
 ####################### CHARGE AND MASS FILTERING ####################################
 def generate_charged_smiles(smiles_list):
+    """
+    Charge exactly one representative atom per symmetry class among chargeable elements,
+    and deduplicate by canonical SMILES before returning and writing to disk.
+    """
     charged = []
+    seen = set()
+
     for smi in tqdm(smiles_list, desc="[CHARGE] Adding charge"):
         mol = Chem.MolFromSmiles(smi, sanitize=False)
         if not mol:
             continue
-        for atom in mol.GetAtoms():
-            if atom.GetSymbol() in charge_elements:
-                mol_copy = RWMol(mol)
-                atom_idx = atom.GetIdx()
-                atom_copy = mol_copy.GetAtomWithIdx(atom_idx)
-                atom_copy.SetFormalCharge(CHARGE)
 
-                try:
-                    Chem.SanitizeMol(mol_copy)
-                    charged_smi = Chem.MolToSmiles(mol_copy, canonical=True)
-                    charged.append(charged_smi)
-                except:
-                    continue
+        # Symmetry classes for atoms (stable across RDKit versions)
+        try:
+            ranks = list(Chem.CanonicalRankAtoms(mol))
+        except Exception:
+            # Fallback: unique rank per atom (disables symmetry pruning if RDKit lacks the call)
+            ranks = list(range(mol.GetNumAtoms()))
 
+        # Choose one representative atom index per symmetry rank (only for allowed elements)
+        reps = {}
+        for a in mol.GetAtoms():
+            if a.GetSymbol() in charge_elements:
+                r = ranks[a.GetIdx()]
+                # Use (element, rank) so different elements with same rank don’t collide
+                reps.setdefault((a.GetSymbol(), r), a.GetIdx())
+
+        # Charge just those representatives
+        for atom_idx in reps.values():
+            mol_copy = RWMol(mol)
+            mol_copy.GetAtomWithIdx(atom_idx).SetFormalCharge(CHARGE)
+            try:
+                Chem.SanitizeMol(mol_copy)
+                csmi = Chem.MolToSmiles(mol_copy, canonical=True)
+            except Exception:
+                continue
+
+            if csmi not in seen:
+                seen.add(csmi)
+                charged.append(csmi)
+
+    # Write unique, sorted
     path = os.path.join(OUTPUT_DIR, f"chargedSMILES_{FORMULA}.txt")
     with open(path, "w") as f:
-        for c in charged:
+        for c in sorted(charged):
             f.write(c + "\n")
     return charged
 
+
 def filter_by_mass(smiles_list):
     filtered = []
+    seen = set()
     for smi in smiles_list:
         mol = Chem.MolFromSmiles(smi)
-        if not mol: continue
+        if not mol:
+            continue
         mass = Descriptors.ExactMolWt(mol)
         if abs(mass - TARGET_MASS) <= TOLERANCE:
-            filtered.append(smi)
+            csmi = Chem.MolToSmiles(mol, canonical=True)
+            if csmi not in seen:
+                seen.add(csmi)
+                filtered.append(csmi)
+
     path = os.path.join(OUTPUT_DIR, f"filteredchargedSMILES_{FORMULA}.txt")
     with open(path, "w") as f:
-        for c in filtered:
+        for c in sorted(filtered):
             f.write(c + "\n")
     return filtered
+
 
 ######################### OUTPUT REPORTING ##########################################
 def generate_xyz_from_smiles(smiles):
@@ -543,6 +574,62 @@ def smiles_to_images(smiles_list):
             except Exception as e:
                 print(f"[WARNING] Failed to generate MOL for {smiles}: {str(e)}")
 
+########################### SUMMARY FILE WRITER #################################
+def _safe_count_lines(path):
+    try:
+        with open(path, "r") as f:
+            return sum(1 for line in f if line.strip())
+    except Exception:
+        return 0
+
+def _write_run_summary(gen_time_s, gen_ram_mb, charge_time_s, charge_ram_mb,
+                       total_time_s, total_ram_mb):
+    """
+    Writes a human-readable summary file mirroring the example the user shared.
+    Only uses information already written to disk by the normal pipeline.
+    """
+    nsmiles_file = f"nSMILES_{FORMULA}.txt"
+    charged_file = f"chargedSMILES_{FORMULA}.txt"
+    filtered_file = f"filteredchargedSMILES_{FORMULA}.txt"
+
+    nsmiles_count = _safe_count_lines(os.path.join(OUTPUT_DIR, nsmiles_file))
+    filtered_count = _safe_count_lines(os.path.join(OUTPUT_DIR, filtered_file))
+
+    # Build summary text
+    lines = []
+    lines.append("ForMileS Run Summary")
+    lines.append("====================\n")
+    lines.append(f"Formula: {FORMULA}")
+    lines.append(f"Charge: {CHARGE}")
+    lines.append(f"Target mass: {TARGET_MASS} ± {TOLERANCE}\n")
+    lines.append("Timings & Memory")
+    lines.append("-----------------")
+    lines.append(f"Molecular graph generation:   time = {gen_time_s:.3f} s | RAM ~ {gen_ram_mb:.1f} MB" if gen_ram_mb is not None else
+                 f"Molecular graph generation:   time = {gen_time_s:.3f} s | RAM ~ unavailable")
+    lines.append(f"Charge generation:            time = {charge_time_s:.3f} s | RAM ~ {charge_ram_mb:.1f} MB" if charge_ram_mb is not None else
+                 f"Charge generation:            time = {charge_time_s:.3f} s | RAM ~ unavailable")
+    lines.append(f"Total wall-time:              time = {total_time_s:.3f} s | RAM ~ {total_ram_mb:.1f} MB\n" if total_ram_mb is not None else
+                 f"Total wall-time:              time = {total_time_s:.3f} s | RAM ~ unavailable\n")
+    lines.append("Counts")
+    lines.append("------")
+    lines.append(f"nSMILES file count:                 {nsmiles_count}")
+    lines.append(f"filteredchargedSMILES file count:   {filtered_count}\n")
+    lines.append("Files")
+    lines.append("-----")
+    lines.append(f"nSMILES file:               {nsmiles_file}")
+    lines.append(f"charged file:               {charged_file}")
+    lines.append(f"filtered charged file:      {filtered_file}\n")
+    lines.append("Notes")
+    lines.append("-----")
+    lines.append("RAM values are instantaneous RSS snapshots taken right after each step.\n")
+
+    # File name mirrors example: run_summary_{FORMULA}.txt
+    out_path = os.path.join(OUTPUT_DIR, f"run_summary_{FORMULA}.txt")
+    with open(out_path, "w") as f:
+        f.write("\n".join(lines))
+
+    print(f"[OK] Wrote run summary: {out_path}")
+
 ########################### MAIN EXECUTION ######################################
 if __name__ == "__main__":
     t0 = time.perf_counter()
@@ -550,16 +637,42 @@ if __name__ == "__main__":
     print("================== ForMileS v2.5 ==================")
     print(f"Structural Setup: Molecular Branching={ALLOW_BRANCHING}, Cyclic={ALLOW_CYCLES}")
     create_output_folder()
+
+    # --- Stage 1: Molecular graph generation (timing + RAM snapshot)
+    t_gen0 = time.perf_counter()
     base_smiles = run_generation()
+    gen_time = time.perf_counter() - t_gen0
+    gen_ram = _get_ram_mb()
+
+    # --- Stage 2: Charge generation (timing + RAM snapshot)
+    t_c0 = time.perf_counter()
     charged = generate_charged_smiles(base_smiles)
+    charge_time = time.perf_counter() - t_c0
+    charge_ram = _get_ram_mb()
+
+    # --- Stage 3: Mass filter (no special timing requested by user)
     final = filter_by_mass(charged)
+
+    # --- Images / coordinate outputs (unchanged behavior)
     smiles_to_images(final)
+
     print("=================== FINISHED ;) ===================")
 
-    # NEW: end timer + RAM
+    # NEW: end timer + RAM and write summary file
     elapsed = time.perf_counter() - t0
     ram_mb = _get_ram_mb()
     if ram_mb is not None:
         print(f"[SUMMARY] Elapsed={elapsed:.2f}s | RAM={ram_mb:.1f} MB (RSS)")
     else:
         print(f"[SUMMARY] Elapsed={elapsed:.2f}s | RAM=unavailable (install 'psutil' to enable)")
+
+    # Persist summary mirroring user's example
+    _write_run_summary(
+        gen_time_s=gen_time,
+        gen_ram_mb=(gen_ram if gen_ram is not None else float("nan")),
+        charge_time_s=charge_time,
+        charge_ram_mb=(charge_ram if charge_ram is not None else float("nan")),
+        total_time_s=elapsed,
+        total_ram_mb=(ram_mb if ram_mb is not None else float("nan")),
+    )
+

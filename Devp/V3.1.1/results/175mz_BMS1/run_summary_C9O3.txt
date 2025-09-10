@@ -1,0 +1,27 @@
+ForMileS Run Summary
+====================
+
+Formula: C9O3
+Charge: 1
+Target mass: 175.1329 ± 0.5
+
+Timings & Memory
+-----------------
+Molecular graph generation:   time = 0.027 s | RAM ~ 70.8 MB
+Charge generation:            time = 0.113 s | RAM ~ 71.7 MB
+Total wall-time:              time = 0.616 s | RAM ~ 74.6 MB
+
+Counts
+------
+nSMILES file count:                 55
+filteredchargedSMILES file count:   30
+
+Files
+-----
+nSMILES file:               nSMILES_C9O3.txt
+charged file:               chargedSMILES_C9O3.txt
+filtered charged file:      filteredchargedSMILES_C9O3.txt
+
+Notes
+-----
+RAM values are instantaneous RSS snapshots taken right after each step.

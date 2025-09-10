@@ -1,0 +1,27 @@
+ForMileS Run Summary
+====================
+
+Formula: C6O2
+Charge: 1
+Target mass: 117.091 ± 0.5
+
+Timings & Memory
+-----------------
+Molecular graph generation:   time = 13.463 s | RAM ~ 71.1 MB
+Charge generation:            time = 5.954 s | RAM ~ 73.5 MB
+Total wall-time:              time = 48.695 s | RAM ~ 77.1 MB
+
+Counts
+------
+nSMILES file count:                 3142
+filteredchargedSMILES file count:   2047
+
+Files
+-----
+nSMILES file:               nSMILES_C6O2.txt
+charged file:               chargedSMILES_C6O2.txt
+filtered charged file:      filteredchargedSMILES_C6O2.txt
+
+Notes
+-----
+RAM values are instantaneous RSS snapshots taken right after each step.

@@ -1,0 +1,104 @@
+<?xml version='1.0' encoding='iso-8859-1'?>
+<svg version='1.1' baseProfile='full'
+              xmlns='http://www.w3.org/2000/svg'
+                      xmlns:rdkit='http://www.rdkit.org/xml'
+                      xmlns:xlink='http://www.w3.org/1999/xlink'
+                  xml:space='preserve'
+width='300px' height='200px' viewBox='0 0 300 200'>
+<!-- END OF HEADER -->
+<rect style='opacity:1.0;fill:#FFFFFF;stroke:none' width='300.0' height='200.0' x='0.0' y='0.0'> </rect>
+<path class='bond-0 atom-0 atom-1' d='M 211.1,10.0 L 226.6,29.7' style='fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2.0px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1' />
+<path class='bond-0 atom-0 atom-1' d='M 226.6,29.7 L 242.2,49.4' style='fill:none;fill-rule:evenodd;stroke:#FF0000;stroke-width:2.0px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1' />
+<path class='bond-1 atom-1 atom-2' d='M 246.5,72.4 L 239.1,90.9' style='fill:none;fill-rule:evenodd;stroke:#FF0000;stroke-width:2.0px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1' />
+<path class='bond-1 atom-1 atom-2' d='M 239.1,90.9 L 231.7,109.4' style='fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2.0px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1' />
+<path class='bond-2 atom-2 atom-3' d='M 236.3,132.4 L 267.2,171.5' style='fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2.0px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1' />
+<path class='bond-3 atom-2 atom-4' d='M 218.0,122.1 L 163.2,130.0' style='fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2.0px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1' />
+<path class='bond-4 atom-4 atom-5' d='M 163.2,130.0 L 139.3,190.0' style='fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2.0px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1' />
+<path class='bond-5 atom-4 atom-6' d='M 163.2,130.0 L 123.2,79.3' style='fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2.0px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1' />
+<path class='bond-6 atom-6 atom-7' d='M 123.2,79.3 L 96.5,83.1' style='fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2.0px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1' />
+<path class='bond-6 atom-6 atom-7' d='M 96.5,83.1 L 69.8,87.0' style='fill:none;fill-rule:evenodd;stroke:#FF0000;stroke-width:2.0px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1' />
+<path d='M 125.2,81.8 L 123.2,79.3 L 121.9,79.4' style='fill:none;stroke:#000000;stroke-width:2.0px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;' />
+<path class='atom-1' d='M 242.7 60.8
+Q 242.7 56.4, 244.9 53.9
+Q 247.1 51.5, 251.1 51.5
+Q 255.2 51.5, 257.4 53.9
+Q 259.5 56.4, 259.5 60.8
+Q 259.5 65.2, 257.3 67.8
+Q 255.1 70.3, 251.1 70.3
+Q 247.1 70.3, 244.9 67.8
+Q 242.7 65.3, 242.7 60.8
+M 251.1 68.2
+Q 253.9 68.2, 255.4 66.4
+Q 256.9 64.5, 256.9 60.8
+Q 256.9 57.2, 255.4 55.4
+Q 253.9 53.6, 251.1 53.6
+Q 248.3 53.6, 246.8 55.4
+Q 245.3 57.2, 245.3 60.8
+Q 245.3 64.5, 246.8 66.4
+Q 248.3 68.2, 251.1 68.2
+' fill='#FF0000'/>
+<path class='atom-2' d='M 220.1 120.8
+Q 220.1 116.3, 222.2 113.9
+Q 224.4 111.5, 228.4 111.5
+Q 232.2 111.5, 234.2 114.2
+L 232.5 115.6
+Q 231.0 113.6, 228.4 113.6
+Q 225.7 113.6, 224.2 115.5
+Q 222.8 117.3, 222.8 120.8
+Q 222.8 124.4, 224.3 126.3
+Q 225.8 128.2, 228.7 128.2
+Q 230.7 128.2, 233.1 126.9
+L 233.8 128.9
+Q 232.9 129.5, 231.4 129.9
+Q 230.0 130.2, 228.4 130.2
+Q 224.4 130.2, 222.2 127.8
+Q 220.1 125.4, 220.1 120.8
+' fill='#000000'/>
+<path class='atom-2' d='M 236.6 114.8
+L 239.8 114.8
+L 239.8 111.4
+L 241.2 111.4
+L 241.2 114.8
+L 244.5 114.8
+L 244.5 116.0
+L 241.2 116.0
+L 241.2 119.4
+L 239.8 119.4
+L 239.8 116.0
+L 236.6 116.0
+L 236.6 114.8
+' fill='#000000'/>
+<path class='atom-7' d='M 32.8 79.5
+L 35.3 79.5
+L 35.3 87.2
+L 44.7 87.2
+L 44.7 79.5
+L 47.2 79.5
+L 47.2 97.8
+L 44.7 97.8
+L 44.7 89.3
+L 35.3 89.3
+L 35.3 97.8
+L 32.8 97.8
+L 32.8 79.5
+' fill='#FF0000'/>
+<path class='atom-7' d='M 50.9 88.6
+Q 50.9 84.2, 53.1 81.7
+Q 55.3 79.3, 59.3 79.3
+Q 63.4 79.3, 65.5 81.7
+Q 67.7 84.2, 67.7 88.6
+Q 67.7 93.0, 65.5 95.5
+Q 63.3 98.0, 59.3 98.0
+Q 55.3 98.0, 53.1 95.5
+Q 50.9 93.0, 50.9 88.6
+M 59.3 96.0
+Q 62.1 96.0, 63.6 94.1
+Q 65.1 92.2, 65.1 88.6
+Q 65.1 85.0, 63.6 83.2
+Q 62.1 81.3, 59.3 81.3
+Q 56.5 81.3, 55.0 83.1
+Q 53.5 84.9, 53.5 88.6
+Q 53.5 92.3, 55.0 94.1
+Q 56.5 96.0, 59.3 96.0
+' fill='#FF0000'/>
+</svg>
