@@ -180,15 +180,7 @@ def _has_bond(mol, i, j):
     return mol.GetBondBetweenAtoms(i, j) is not None
 
 def try_ring_closures(mol, target_formula, collected, seen, depth=0, max_new=10):
-    """
-    Attempt to create rings by adding a bond between two existing atoms that still
-    have valence capacity. Only runs when ALLOW_CYCLES is True.
 
-    - Keeps atom counts (formula) unchanged.
-    - Respects max_valence and bond_orders (requires at least single bond allowed).
-    - Dedup via process_complete_molecule() using canonical SMILES.
-    - Bounded by max_new to avoid blow-up.
-    """
     if not ALLOW_CYCLES:
         return
 

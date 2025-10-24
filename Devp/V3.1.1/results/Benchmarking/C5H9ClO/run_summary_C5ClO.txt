@@ -1,0 +1,27 @@
+ForMileS Run Summary
+====================
+
+Formula: C5ClO
+Charge: 0
+Target mass: 120.034 ± 0.5
+
+Timings & Memory
+-----------------
+Molecular graph generation:   time = 16.268 s | RAM ~ 71.0 MB
+Charge generation:            time = 6.392 s | RAM ~ 72.1 MB
+Total wall-time:              time = 27.297 s | RAM ~ 75.0 MB
+
+Counts
+------
+nSMILES file count:                 3537
+filteredchargedSMILES file count:   334
+
+Files
+-----
+nSMILES file:               nSMILES_C5ClO.txt
+charged file:               chargedSMILES_C5ClO.txt
+filtered charged file:      filteredchargedSMILES_C5ClO.txt
+
+Notes
+-----
+RAM values are instantaneous RSS snapshots taken right after each step.
