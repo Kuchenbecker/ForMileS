@@ -4,7 +4,7 @@
 It allows researchers to explore chemical space consistent with a given **molecular formula**, **exact mass**, and **bonding rules** using RDKit, while respecting valence and structural constraints.
 
 <p align="center">
-  <img src="https://github.com/Kuchenbecker/ForMileS/ForMileS_LogoType.png" width="700"/>
+  <img src="https://github.com/Kuchenbecker/ForMileS/ForMileS_Logotype.png" width="700"/>
 </p>
 
 ---
