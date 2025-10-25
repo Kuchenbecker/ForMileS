@@ -105,7 +105,7 @@ def open_output_folder():
 
 # GUI Layout
 root = tk.Tk()
-root.title("ForMileS V2.6")
+root.title("ForMileS V3.1.1")
 root.geometry("400x670")
 
 tk.Label(root, text="Molecular Formula:").pack()
