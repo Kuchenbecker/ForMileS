@@ -3,9 +3,7 @@
 **ForMileS (Formation of Mass SMILES)** is a molecular graph generation engine built for **systematic SMILES enumeration**, **mass-based filtering**, and **charge modeling**.  
 It allows researchers to explore chemical space consistent with a given **molecular formula**, **exact mass**, and **bonding rules** using RDKit, while respecting valence and structural constraints.
 
-<p align="center">
-  <img src="https://github.com/Kuchenbecker/ForMileS/ForMileS_Logotype.png" width="700"/>
-</p>
+**Article for Details. Please consider citing it when using ForMileS:** https://doi.org/10.1021/acsomega.5c08184
 
 ---
 
