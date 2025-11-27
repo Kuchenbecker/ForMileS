@@ -1,0 +1,20 @@
+{
+  "FORMULA": "C2O",
+  "MOL_SCAFFOLD": [
+    "C"
+  ],
+  "CHARGE": 1,
+  "TARGET_MASS": 45.034,
+  "TOLERANCE": 0.5,
+  "PARAM_FILE": "/home/vkuchenbecker/3.Codes/GitHub/ForMileS/src/parameters.json",
+  "SAVE_XYZ": false,
+  "SAVE_MOL": false,
+  "SAVE_SVG": false,
+  "ALLOW_BRANCHING": true,
+  "ALLOW_CYCLES": true,
+  "ALLOW_DOUBLE_BONDS": true,
+  "ALLOW_TRIPLE_BONDS": true,
+  "MAX_DOUBLE_BONDS": 2,
+  "MAX_TRIPLE_BONDS": 2,
+  "OUTPUT_DIR": "/media/vkuchenbecker/HDD_1TB/1.projetos/1.PO3G/results_ForMileS"
+}
